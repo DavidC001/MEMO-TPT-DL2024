@@ -1,26 +1,32 @@
 from torch.utils.data import Dataset
 import cv2
 import os
+import csv
 
 class ImageNetA(Dataset):
-    def __init__(self, root, transform=None):
+    def __init__(self, root, csvMapFile="dataloaders/wordNetIDs2Classes.csv", transform=None):
         paths = []
         labels = []
         names = []
 
         mapping = {}
-        csv_wordNet2ImageNet = 'wordNetIDs2Classes.csv'
-        with open(csv_wordNet2ImageNet, 'r') as f:
-            lines = f.readlines()
-            for line in lines[1:]:
-                id, wordnet, name = line.strip().split(',')
-                mapping[wordnet] = {'id': id, 'name': name}
+        csv_file = csv.reader(open(csvMapFile, 'r'))
+        for id, wordnet, name in csv_file:
+            if id == 'resnet_label':
+                continue
+            mapping[int(wordnet)] = {'id': id, 'name': name}
+
+        #print(mapping)
 
         for classes in os.listdir(root):
+            if classes == 'README.txt':
+                continue
             for img in os.listdir(os.path.join(root, classes)):
                 paths.append(os.path.join(root, classes, img).replace('\\', '/'))
-                labels.append(mapping[classes[2:]]['id'])
-                names.append(mapping[classes[2:]]['name'])
+                #remove n and leading 0s
+                class_id = int(classes[1:])
+                labels.append(mapping[class_id]['id'])
+                names.append(mapping[class_id]['name'])
 
         self.data = {
             'paths': paths,
@@ -29,7 +35,7 @@ class ImageNetA(Dataset):
         }
         self.transform = transform
 
-    def getClasses(self):
+    def getClassesNames(self):
         return self.data['names']
 
     def __len__(self):
@@ -49,3 +55,28 @@ class ImageNetA(Dataset):
             'label': label,
             'name': name
         }
+
+
+if __name__ == '__main__':
+    import torchvision.transforms as transforms
+    from torch.utils.data import DataLoader
+    from matplotlib import pyplot as plt
+
+    root = 'datasets/imagenet-a'
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ])
+
+    dataset = ImageNetA(root, transform=transform)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+
+    for data in dataloader:
+        img = data['img'][0].permute(1, 2, 0)
+        label = data['label'][0]
+        name = data['name'][0]
+
+        plt.imshow(img)
+        plt.title(f'{name} ({label})')
+        plt.show()
