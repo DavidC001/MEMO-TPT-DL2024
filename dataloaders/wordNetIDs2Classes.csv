@@ -1,0 +1,1001 @@
+resnet_label,imagenet_a_label,name
+0,1440764,"tench, Tinca tinca"
+1,1443537,"goldfish, Carassius auratus"
+2,1484850,"great white shark, white shark, man-eater, man-eating shark, Carcharodon carcharias"
+3,1491361,"tiger shark, Galeocerdo cuvieri"
+4,1494475,"hammerhead, hammerhead shark"
+5,1496331,"electric ray, crampfish, numbfish, torpedo"
+6,1498041,stingray
+7,1514668,cock
+8,1514859,hen
+9,1518878,"ostrich, Struthio camelus"
+10,1530575,"brambling, Fringilla montifringilla"
+11,1531178,"goldfinch, Carduelis carduelis"
+12,1532829,"house finch, linnet, Carpodacus mexicanus"
+13,1534433,"junco, snowbird"
+14,1537544,"indigo bunting, indigo finch, indigo bird, Passerina cyanea"
+15,1558993,"robin, American robin, Turdus migratorius"
+16,1560419,bulbul
+17,1580077,jay
+18,1582220,magpie
+19,1592084,chickadee
+20,1601694,"water ouzel, dipper"
+21,1608432,kite
+22,1614925,"bald eagle, American eagle, Haliaeetus leucocephalus"
+23,1616318,vulture
+24,1622779,"great grey owl, great gray owl, Strix nebulosa"
+25,1629819,"European fire salamander, Salamandra salamandra"
+26,1630670,"common newt, Triturus vulgaris"
+27,1631663,eft
+28,1632458,"spotted salamander, Ambystoma maculatum"
+29,1632777,"axolotl, mud puppy, Ambystoma mexicanum"
+30,1641577,"bullfrog, Rana catesbeiana"
+31,1644373,"tree frog, tree-frog"
+32,1644900,"tailed frog, bell toad, ribbed toad, tailed toad, Ascaphus trui"
+33,1664065,"loggerhead, loggerhead turtle, Caretta caretta"
+34,1665541,"leatherback turtle, leatherback, leathery turtle, Dermochelys coriacea"
+35,1667114,mud turtle
+36,1667778,terrapin
+37,1669191,"box turtle, box tortoise"
+38,1675722,banded gecko
+39,1677366,"common iguana, iguana, Iguana iguana"
+40,1682714,"American chameleon, anole, Anolis carolinensis"
+41,1685808,"whiptail, whiptail lizard"
+42,1687978,agama
+43,1688243,"frilled lizard, Chlamydosaurus kingi"
+44,1689811,alligator lizard
+45,1692333,"Gila monster, Heloderma suspectum"
+46,1693334,"green lizard, Lacerta viridis"
+47,1694178,"African chameleon, Chamaeleo chamaeleon"
+48,1695060,"Komodo dragon, Komodo lizard, dragon lizard, giant lizard, Varanus komodoensis"
+49,1697457,"African crocodile, Nile crocodile, Crocodylus niloticus"
+50,1698640,"American alligator, Alligator mississipiensis"
+51,1704323,triceratops
+52,1728572,"thunder snake, worm snake, Carphophis amoenus"
+53,1728920,"ringneck snake, ring-necked snake, ring snake"
+54,1729322,"hognose snake, puff adder, sand viper"
+55,1729977,"green snake, grass snake"
+56,1734418,"king snake, kingsnake"
+57,1735189,"garter snake, grass snake"
+58,1737021,water snake
+59,1739381,vine snake
+60,1740131,"night snake, Hypsiglena torquata"
+61,1742172,"boa constrictor, Constrictor constrictor"
+62,1744401,"rock python, rock snake, Python sebae"
+63,1748264,"Indian cobra, Naja naja"
+64,1749939,green mamba
+65,1751748,sea snake
+66,1753488,"horned viper, cerastes, sand viper, horned asp, Cerastes cornutus"
+67,1755581,"diamondback, diamondback rattlesnake, Crotalus adamanteus"
+68,1756291,"sidewinder, horned rattlesnake, Crotalus cerastes"
+69,1768244,trilobite
+70,1770081,"harvestman, daddy longlegs, Phalangium opilio"
+71,1770393,scorpion
+72,1773157,"black and gold garden spider, Argiope aurantia"
+73,1773549,"barn spider, Araneus cavaticus"
+74,1773797,"garden spider, Aranea diademata"
+75,1774384,"black widow, Latrodectus mactans"
+76,1774750,tarantula
+77,1775062,"wolf spider, hunting spider"
+78,1776313,tick
+79,1784675,centipede
+80,1795545,black grouse
+81,1796340,ptarmigan
+82,1797886,"ruffed grouse, partridge, Bonasa umbellus"
+83,1798484,"prairie chicken, prairie grouse, prairie fowl"
+84,1806143,peacock
+85,1806567,quail
+86,1807496,partridge
+87,1817953,"African grey, African gray, Psittacus erithacus"
+88,1818515,macaw
+89,1819313,"sulphur-crested cockatoo, Kakatoe galerita, Cacatua galerita"
+90,1820546,lorikeet
+91,1824575,coucal
+92,1828970,bee eater
+93,1829413,hornbill
+94,1833805,hummingbird
+95,1843065,jacamar
+96,1843383,toucan
+97,1847000,drake
+98,1855032,"red-breasted merganser, Mergus serrator"
+99,1855672,goose
+100,1860187,"black swan, Cygnus atratus"
+101,1871265,tusker
+102,1872401,"echidna, spiny anteater, anteater"
+103,1873310,"platypus, duckbill, duckbilled platypus, duck-billed platypus, Ornithorhynchus anatinus"
+104,1877812,"wallaby, brush kangaroo"
+105,1882714,"koala, koala bear, kangaroo bear, native bear, Phascolarctos cinereus"
+106,1883070,wombat
+107,1910747,jellyfish
+108,1914609,"sea anemone, anemone"
+109,1917289,brain coral
+110,1924916,"flatworm, platyhelminth"
+111,1930112,"nematode, nematode worm, roundworm"
+112,1943899,conch
+113,1944390,snail
+114,1945685,slug
+115,1950731,"sea slug, nudibranch"
+116,1955084,"chiton, coat-of-mail shell, sea cradle, polyplacophore"
+117,1968897,"chambered nautilus, pearly nautilus, nautilus"
+118,1978287,"Dungeness crab, Cancer magister"
+119,1978455,"rock crab, Cancer irroratus"
+120,1980166,fiddler crab
+121,1981276,"king crab, Alaska crab, Alaskan king crab, Alaska king crab, Paralithodes camtschatica"
+122,1983481,"American lobster, Northern lobster, Maine lobster, Homarus americanus"
+123,1984695,"spiny lobster, langouste, rock lobster, crawfish, crayfish, sea crawfish"
+124,1985128,"crayfish, crawfish, crawdad, crawdaddy"
+125,1986214,hermit crab
+126,1990800,isopod
+127,2002556,"white stork, Ciconia ciconia"
+128,2002724,"black stork, Ciconia nigra"
+129,2006656,spoonbill
+130,2007558,flamingo
+131,2009229,"little blue heron, Egretta caerulea"
+132,2009912,"American egret, great white heron, Egretta albus"
+133,2011460,bittern
+134,3126707,crane
+135,2013706,"limpkin, Aramus pictus"
+136,2017213,"European gallinule, Porphyrio porphyrio"
+137,2018207,"American coot, marsh hen, mud hen, water hen, Fulica americana"
+138,2018795,bustard
+139,2025239,"ruddy turnstone, Arenaria interpres"
+140,2027492,"red-backed sandpiper, dunlin, Erolia alpina"
+141,2028035,"redshank, Tringa totanus"
+142,2033041,dowitcher
+143,2037110,"oystercatcher, oyster catcher"
+144,2051845,pelican
+145,2056570,"king penguin, Aptenodytes patagonica"
+146,2058221,"albatross, mollymawk"
+147,2066245,"grey whale, gray whale, devilfish, Eschrichtius gibbosus, Eschrichtius robustus"
+148,2071294,"killer whale, killer, orca, grampus, sea wolf, Orcinus orca"
+149,2074367,"dugong, Dugong dugon"
+150,2077923,sea lion
+151,2085620,Chihuahua
+152,2085782,Japanese spaniel
+153,2085936,"Maltese dog, Maltese terrier, Maltese"
+154,2086079,"Pekinese, Pekingese, Peke"
+155,2086240,Shih-Tzu
+156,2086646,Blenheim spaniel
+157,2086910,papillon
+158,2087046,toy terrier
+159,2087394,Rhodesian ridgeback
+160,2088094,"Afghan hound, Afghan"
+161,2088238,"basset, basset hound"
+162,2088364,beagle
+163,2088466,"bloodhound, sleuthhound"
+164,2088632,bluetick
+165,2089078,black-and-tan coonhound
+166,2089867,"Walker hound, Walker foxhound"
+167,2089973,English foxhound
+168,2090379,redbone
+169,2090622,"borzoi, Russian wolfhound"
+170,2090721,Irish wolfhound
+171,2091032,Italian greyhound
+172,2091134,whippet
+173,2091244,"Ibizan hound, Ibizan Podenco"
+174,2091467,"Norwegian elkhound, elkhound"
+175,2091635,"otterhound, otter hound"
+176,2091831,"Saluki, gazelle hound"
+177,2092002,"Scottish deerhound, deerhound"
+178,2092339,Weimaraner
+179,2093256,"Staffordshire bullterrier, Staffordshire bull terrier"
+180,2093428,"American Staffordshire terrier, Staffordshire terrier, American pit bull terrier, pit bull terrier"
+181,2093647,Bedlington terrier
+182,2093754,Border terrier
+183,2093859,Kerry blue terrier
+184,2093991,Irish terrier
+185,2094114,Norfolk terrier
+186,2094258,Norwich terrier
+187,2094433,Yorkshire terrier
+188,2095314,wire-haired fox terrier
+189,2095570,Lakeland terrier
+190,2095889,"Sealyham terrier, Sealyham"
+191,2096051,"Airedale, Airedale terrier"
+192,2096177,"cairn, cairn terrier"
+193,2096294,Australian terrier
+194,2096437,"Dandie Dinmont, Dandie Dinmont terrier"
+195,2096585,"Boston bull, Boston terrier"
+196,2097047,miniature schnauzer
+197,2097130,giant schnauzer
+198,2097209,standard schnauzer
+199,2097298,"Scotch terrier, Scottish terrier, Scottie"
+200,2097474,"Tibetan terrier, chrysanthemum dog"
+201,2097658,"silky terrier, Sydney silky"
+202,2098105,soft-coated wheaten terrier
+203,2098286,West Highland white terrier
+204,2098413,"Lhasa, Lhasa apso"
+205,2099267,flat-coated retriever
+206,2099429,curly-coated retriever
+207,2099601,golden retriever
+208,2099712,Labrador retriever
+209,2099849,Chesapeake Bay retriever
+210,2100236,German short-haired pointer
+211,2100583,"vizsla, Hungarian pointer"
+212,2100735,English setter
+213,2100877,"Irish setter, red setter"
+214,2101006,Gordon setter
+215,2101388,Brittany spaniel
+216,2101556,"clumber, clumber spaniel"
+217,2102040,"English springer, English springer spaniel"
+218,2102177,Welsh springer spaniel
+219,2102318,"cocker spaniel, English cocker spaniel, cocker"
+220,2102480,Sussex spaniel
+221,2102973,Irish water spaniel
+222,2104029,kuvasz
+223,2104365,schipperke
+224,2105056,groenendael
+225,2105162,malinois
+226,2105251,briard
+227,2105412,kelpie
+228,2105505,komondor
+229,2105641,"Old English sheepdog, bobtail"
+230,2105855,"Shetland sheepdog, Shetland sheep dog, Shetland"
+231,2106030,collie
+232,2106166,Border collie
+233,2106382,"Bouvier des Flandres, Bouviers des Flandres"
+234,2106550,Rottweiler
+235,2106662,"German shepherd, German shepherd dog, German police dog, alsatian"
+236,2107142,"Doberman, Doberman pinscher"
+237,2107312,miniature pinscher
+238,2107574,Greater Swiss Mountain dog
+239,2107683,Bernese mountain dog
+240,2107908,Appenzeller
+241,2108000,EntleBucher
+242,2108089,boxer
+243,2108422,bull mastiff
+244,2108551,Tibetan mastiff
+245,2108915,French bulldog
+246,2109047,Great Dane
+247,2109525,"Saint Bernard, St Bernard"
+248,2109961,"Eskimo dog, husky"
+249,2110063,"malamute, malemute, Alaskan malamute"
+250,2110185,Siberian husky
+251,2110341,"dalmatian, coach dog, carriage dog"
+252,2110627,"affenpinscher, monkey pinscher, monkey dog"
+253,2110806,basenji
+254,2110958,"pug, pug-dog"
+255,2111129,Leonberg
+256,2111277,"Newfoundland, Newfoundland dog"
+257,2111500,Great Pyrenees
+258,2111889,"Samoyed, Samoyede"
+259,2112018,Pomeranian
+260,2112137,"chow, chow chow"
+261,2112350,keeshond
+262,2112706,Brabancon griffon
+263,2113023,"Pembroke, Pembroke Welsh corgi"
+264,2113186,"Cardigan, Cardigan Welsh corgi"
+265,2113624,toy poodle
+266,2113712,miniature poodle
+267,2113799,standard poodle
+268,2113978,Mexican hairless
+269,2114367,"timber wolf, grey wolf, gray wolf, Canis lupus"
+270,2114548,"white wolf, Arctic wolf, Canis lupus tundrarum"
+271,2114712,"red wolf, maned wolf, Canis rufus, Canis niger"
+272,2114855,"coyote, prairie wolf, brush wolf, Canis latrans"
+273,2115641,"dingo, warrigal, warragal, Canis dingo"
+274,2115913,"dhole, Cuon alpinus"
+275,2116738,"African hunting dog, hyena dog, Cape hunting dog, Lycaon pictus"
+276,2117135,"hyena, hyaena"
+277,2119022,"red fox, Vulpes vulpes"
+278,2119789,"kit fox, Vulpes macrotis"
+279,2120079,"Arctic fox, white fox, Alopex lagopus"
+280,2120505,"grey fox, gray fox, Urocyon cinereoargenteus"
+281,2123045,"tabby, tabby cat"
+282,2123159,tiger cat
+283,2123394,Persian cat
+284,2123597,"Siamese cat, Siamese"
+285,2124075,Egyptian cat
+286,2125311,"cougar, puma, catamount, mountain lion, painter, panther, Felis concolor"
+287,2127052,"lynx, catamount"
+288,2128385,"leopard, Panthera pardus"
+289,2128757,"snow leopard, ounce, Panthera uncia"
+290,2128925,"jaguar, panther, Panthera onca, Felis onca"
+291,2129165,"lion, king of beasts, Panthera leo"
+292,2129604,"tiger, Panthera tigris"
+293,2130308,"cheetah, chetah, Acinonyx jubatus"
+294,2132136,"brown bear, bruin, Ursus arctos"
+295,2133161,"American black bear, black bear, Ursus americanus, Euarctos americanus"
+296,2134084,"ice bear, polar bear, Ursus Maritimus, Thalarctos maritimus"
+297,2134418,"sloth bear, Melursus ursinus, Ursus ursinus"
+298,2137549,mongoose
+299,2138441,"meerkat, mierkat"
+300,2165105,tiger beetle
+301,2165456,"ladybug, ladybeetle, lady beetle, ladybird, ladybird beetle"
+302,2167151,"ground beetle, carabid beetle"
+303,2168699,"long-horned beetle, longicorn, longicorn beetle"
+304,2169497,"leaf beetle, chrysomelid"
+305,2172182,dung beetle
+306,2174001,rhinoceros beetle
+307,2177972,weevil
+308,2190166,fly
+309,2206856,bee
+310,2219486,"ant, emmet, pismire"
+311,2226429,"grasshopper, hopper"
+312,2229544,cricket
+313,2231487,"walking stick, walkingstick, stick insect"
+314,2233338,"cockroach, roach"
+315,2236044,"mantis, mantid"
+316,2256656,"cicada, cicala"
+317,2259212,leafhopper
+318,2264363,"lacewing, lacewing fly"
+319,2268443,"dragonfly, darning needle, devil's darning needle, sewing needle, snake feeder, snake doctor, mosquito hawk, skeeter hawk"
+320,2268853,damselfly
+321,2276258,admiral
+322,2277742,"ringlet, ringlet butterfly"
+323,2279972,"monarch, monarch butterfly, milkweed butterfly, Danaus plexippus"
+324,2280649,cabbage butterfly
+325,2281406,"sulphur butterfly, sulfur butterfly"
+326,2281787,"lycaenid, lycaenid butterfly"
+327,2317335,"starfish, sea star"
+328,2319095,sea urchin
+329,2321529,"sea cucumber, holothurian"
+330,2325366,"wood rabbit, cottontail, cottontail rabbit"
+331,2326432,hare
+332,2328150,"Angora, Angora rabbit"
+333,2342885,hamster
+334,2346627,"porcupine, hedgehog"
+335,2356798,"fox squirrel, eastern fox squirrel, Sciurus niger"
+336,2361337,marmot
+337,2363005,beaver
+338,2364673,"guinea pig, Cavia cobaya"
+339,2389026,sorrel
+340,2391049,zebra
+341,2395406,"hog, pig, grunter, squealer, Sus scrofa"
+342,2396427,"wild boar, boar, Sus scrofa"
+343,2397096,warthog
+344,2398521,"hippopotamus, hippo, river horse, Hippopotamus amphibius"
+345,2403003,ox
+346,2408429,"water buffalo, water ox, Asiatic buffalo, Bubalus bubalis"
+347,2410509,bison
+348,2412080,"ram, tup"
+349,2415577,"bighorn, bighorn sheep, cimarron, Rocky Mountain bighorn, Rocky Mountain sheep, Ovis canadensis"
+350,2417914,"ibex, Capra ibex"
+351,2422106,hartebeest
+352,2422699,"impala, Aepyceros melampus"
+353,2423022,gazelle
+354,2437312,"Arabian camel, dromedary, Camelus dromedarius"
+355,2437616,llama
+356,2441942,weasel
+357,2442845,mink
+358,2443114,"polecat, fitch, foulmart, foumart, Mustela putorius"
+359,2443484,"black-footed ferret, ferret, Mustela nigripes"
+360,2444819,otter
+361,2445715,"skunk, polecat, wood pussy"
+362,2447366,badger
+363,2454379,armadillo
+364,2457408,"three-toed sloth, ai, Bradypus tridactylus"
+365,2480495,"orangutan, orang, orangutang, Pongo pygmaeus"
+366,2480855,"gorilla, Gorilla gorilla"
+367,2481823,"chimpanzee, chimp, Pan troglodytes"
+368,2483362,"gibbon, Hylobates lar"
+369,2483708,"siamang, Hylobates syndactylus, Symphalangus syndactylus"
+370,2484975,"guenon, guenon monkey"
+371,2486261,"patas, hussar monkey, Erythrocebus patas"
+372,2486410,baboon
+373,2487347,macaque
+374,2488291,langur
+375,2488702,"colobus, colobus monkey"
+376,2489166,"proboscis monkey, Nasalis larvatus"
+377,2490219,marmoset
+378,2492035,"capuchin, ringtail, Cebus capucinus"
+379,2492660,"howler monkey, howler"
+380,2493509,"titi, titi monkey"
+381,2493793,"spider monkey, Ateles geoffroyi"
+382,2494079,"squirrel monkey, Saimiri sciureus"
+383,2497673,"Madagascar cat, ring-tailed lemur, Lemur catta"
+384,2500267,"indri, indris, Indri indri, Indri brevicaudatus"
+385,2504013,"Indian elephant, Elephas maximus"
+386,2504458,"African elephant, Loxodonta africana"
+387,2509815,"lesser panda, red panda, panda, bear cat, cat bear, Ailurus fulgens"
+388,2510455,"giant panda, panda, panda bear, coon bear, Ailuropoda melanoleuca"
+389,2514041,"barracouta, snoek"
+390,2526121,eel
+391,2536864,"coho, cohoe, coho salmon, blue jack, silver salmon, Oncorhynchus kisutch"
+392,2606052,"rock beauty, Holocanthus tricolor"
+393,2607072,anemone fish
+394,2640242,sturgeon
+395,2641379,"gar, garfish, garpike, billfish, Lepisosteus osseus"
+396,2643566,lionfish
+397,2655020,"puffer, pufferfish, blowfish, globefish"
+398,2666196,abacus
+399,2667093,abaya
+400,2669723,"academic gown, academic robe, judge's robe"
+401,2672831,"accordion, piano accordion, squeeze box"
+402,2676566,acoustic guitar
+403,2687172,"aircraft carrier, carrier, flattop, attack aircraft carrier"
+404,2690373,airliner
+405,2692877,"airship, dirigible"
+406,2699494,altar
+407,2701002,ambulance
+408,2704792,"amphibian, amphibious vehicle"
+409,2708093,analog clock
+410,2727426,"apiary, bee house"
+411,2730930,apron
+412,2747177,"ashcan, trash can, garbage can, wastebin, ash bin, ash-bin, ashbin, dustbin, trash barrel, trash bin"
+413,2749479,"assault rifle, assault gun"
+414,2769748,"backpack, back pack, knapsack, packsack, rucksack, haversack"
+415,2776631,"bakery, bakeshop, bakehouse"
+416,2777292,"balance beam, beam"
+417,2782093,balloon
+418,2783161,"ballpoint, ballpoint pen, ballpen, Biro"
+419,2786058,Band Aid
+420,2787622,banjo
+421,2788148,"bannister, banister, balustrade, balusters, handrail"
+422,2790996,barbell
+423,2791124,barber chair
+424,2791270,barbershop
+425,2793495,barn
+426,2794156,barometer
+427,2795169,"barrel, cask"
+428,2797295,"barrow, garden cart, lawn cart, wheelbarrow"
+429,2799071,baseball
+430,2802426,basketball
+431,2804414,bassinet
+432,2804610,bassoon
+433,2807133,"bathing cap, swimming cap"
+434,2808304,bath towel
+435,2808440,"bathtub, bathing tub, bath, tub"
+436,2814533,"beach wagon, station wagon, wagon, estate car, beach waggon, station waggon, waggon"
+437,2814860,"beacon, lighthouse, beacon light, pharos"
+438,2815834,beaker
+439,2817516,"bearskin, busby, shako"
+440,2823428,beer bottle
+441,2823750,beer glass
+442,2825657,"bell cote, bell cot"
+443,2834397,bib
+444,2835271,"bicycle-built-for-two, tandem bicycle, tandem"
+445,2837789,"bikini, two-piece"
+446,2840245,"binder, ring-binder"
+447,2841315,"binoculars, field glasses, opera glasses"
+448,2843684,birdhouse
+449,2859443,boathouse
+450,2860847,"bobsled, bobsleigh, bob"
+451,2865351,"bolo tie, bolo, bola tie, bola"
+452,2869837,"bonnet, poke bonnet"
+453,2870880,bookcase
+454,2871525,"bookshop, bookstore, bookstall"
+455,2877765,bottlecap
+456,2879718,bow
+457,2883205,"bow tie, bow-tie, bowtie"
+458,2892201,"brass, memorial tablet, plaque"
+459,2892767,"brassiere, bra, bandeau"
+460,2894605,"breakwater, groin, groyne, mole, bulwark, seawall, jetty"
+461,2895154,"breastplate, aegis, egis"
+462,2906734,broom
+463,2909870,"bucket, pail"
+464,2910353,buckle
+465,2916936,bulletproof vest
+466,2917067,"bullet train, bullet"
+467,2927161,"butcher shop, meat market"
+468,2930766,"cab, hack, taxi, taxicab"
+469,2939185,"caldron, cauldron"
+470,2948072,"candle, taper, wax light"
+471,2950826,cannon
+472,2951358,canoe
+473,2951585,"can opener, tin opener"
+474,2963159,cardigan
+475,2965783,car mirror
+476,2966193,"carousel, carrousel, merry-go-round, roundabout, whirligig"
+477,2966687,"carpenter's kit, tool kit"
+478,2971356,carton
+479,2974003,car wheel
+480,2977058,"cash machine, cash dispenser, automated teller machine, automatic teller machine, automated teller, automatic teller, ATM"
+481,2978881,cassette
+482,2979186,cassette player
+483,2980441,castle
+484,2981792,catamaran
+485,2988304,CD player
+486,2992211,"cello, violoncello"
+487,2992529,"cellular telephone, cellular phone, cellphone, cell, mobile phone"
+488,2999410,chain
+489,3000134,chainlink fence
+490,3000247,"chain mail, ring mail, mail, chain armor, chain armour, ring armor, ring armour"
+491,3000684,"chain saw, chainsaw"
+492,3014705,chest
+493,3016953,"chiffonier, commode"
+494,3017168,"chime, bell, gong"
+495,3018349,"china cabinet, china closet"
+496,3026506,Christmas stocking
+497,3028079,"church, church building"
+498,3032252,"cinema, movie theater, movie theatre, movie house, picture palace"
+499,3041632,"cleaver, meat cleaver, chopper"
+500,3042490,cliff dwelling
+501,3045698,cloak
+502,3047690,"clog, geta, patten, sabot"
+503,3062245,cocktail shaker
+504,3063599,coffee mug
+505,3063689,coffeepot
+506,3065424,"coil, spiral, volute, whorl, helix"
+507,3075370,combination lock
+508,3085013,"computer keyboard, keypad"
+509,3089624,"confectionery, confectionary, candy store"
+510,3095699,"container ship, containership, container vessel"
+511,3100240,convertible
+512,3109150,"corkscrew, bottle screw"
+513,3110669,"cornet, horn, trumpet, trump"
+514,3124043,cowboy boot
+515,3124170,"cowboy hat, ten-gallon hat"
+516,3125729,cradle
+517,3126707,crane
+518,3127747,crash helmet
+519,3127925,crate
+520,3131574,"crib, cot"
+521,3133878,Crock Pot
+522,3134739,croquet ball
+523,3141823,crutch
+524,3146219,cuirass
+525,3160309,"dam, dike, dyke"
+526,3179701,desk
+527,3180011,desktop computer
+528,3187595,"dial telephone, dial phone"
+529,3188531,"diaper, nappy, napkin"
+530,3196217,digital clock
+531,3197337,digital watch
+532,3201208,"dining table, board"
+533,3207743,"dishrag, dishcloth"
+534,3207941,"dishwasher, dish washer, dishwashing machine"
+535,3208938,"disk brake, disc brake"
+536,3216828,"dock, dockage, docking facility"
+537,3218198,"dogsled, dog sled, dog sleigh"
+538,3220513,dome
+539,3223299,"doormat, welcome mat"
+540,3240683,"drilling platform, offshore rig"
+541,3249569,"drum, membranophone, tympan"
+542,3250847,drumstick
+543,3255030,dumbbell
+544,3259280,Dutch oven
+545,3271574,"electric fan, blower"
+546,3272010,electric guitar
+547,3272562,electric locomotive
+548,3290653,entertainment center
+549,3291819,envelope
+550,3297495,espresso maker
+551,3314780,face powder
+552,3325584,"feather boa, boa"
+553,3337140,"file, file cabinet, filing cabinet"
+554,3344393,fireboat
+555,3345487,"fire engine, fire truck"
+556,3347037,"fire screen, fireguard"
+557,3355925,"flagpole, flagstaff"
+558,3372029,"flute, transverse flute"
+559,3376595,folding chair
+560,3379051,football helmet
+561,3384352,forklift
+562,3388043,fountain
+563,3388183,fountain pen
+564,3388549,four-poster
+565,3393912,freight car
+566,3394916,"French horn, horn"
+567,3400231,"frying pan, frypan, skillet"
+568,3404251,fur coat
+569,3417042,"garbage truck, dustcart"
+570,3424325,"gasmask, respirator, gas helmet"
+571,3425413,"gas pump, gasoline pump, petrol pump, island dispenser"
+572,3443371,goblet
+573,3444034,go-kart
+574,3445777,golf ball
+575,3445924,"golfcart, golf cart"
+576,3447447,gondola
+577,3447721,"gong, tam-tam"
+578,3450230,gown
+579,3452741,"grand piano, grand"
+580,3457902,"greenhouse, nursery, glasshouse"
+581,3459775,"grille, radiator grille"
+582,3461385,"grocery store, grocery, food market, market"
+583,3467068,guillotine
+584,3476684,hair slide
+585,3476991,hair spray
+586,3478589,half track
+587,3481172,hammer
+588,3482405,hamper
+589,3483316,"hand blower, blow dryer, blow drier, hair dryer, hair drier"
+590,3485407,"hand-held computer, hand-held microcomputer"
+591,3485794,"handkerchief, hankie, hanky, hankey"
+592,3492542,"hard disc, hard disk, fixed disk"
+593,3494278,"harmonica, mouth organ, harp, mouth harp"
+594,3495258,harp
+595,3496892,"harvester, reaper"
+596,3498962,hatchet
+597,3527444,holster
+598,3529860,"home theater, home theatre"
+599,3530642,honeycomb
+600,3532672,"hook, claw"
+601,3534580,"hoopskirt, crinoline"
+602,3535780,"horizontal bar, high bar"
+603,3538406,"horse cart, horse-cart"
+604,3544143,hourglass
+605,3584254,iPod
+606,3584829,"iron, smoothing iron"
+607,3590841,jack-o'-lantern
+608,3594734,"jean, blue jean, denim"
+609,3594945,"jeep, landrover"
+610,3595614,"jersey, T-shirt, tee shirt"
+611,3598930,jigsaw puzzle
+612,3599486,"jinrikisha, ricksha, rickshaw"
+613,3602883,joystick
+614,3617480,kimono
+615,3623198,knee pad
+616,3627232,knot
+617,3630383,"lab coat, laboratory coat"
+618,3633091,ladle
+619,3637318,"lampshade, lamp shade"
+620,3642806,"laptop, laptop computer"
+621,3649909,"lawn mower, mower"
+622,3657121,"lens cap, lens cover"
+623,3658185,"letter opener, paper knife, paperknife"
+624,3661043,library
+625,3662601,lifeboat
+626,3666591,"lighter, light, igniter, ignitor"
+627,3670208,"limousine, limo"
+628,3673027,"liner, ocean liner"
+629,3676483,"lipstick, lip rouge"
+630,3680355,Loafer
+631,3690938,lotion
+632,3691459,"loudspeaker, speaker, speaker unit, loudspeaker system, speaker system"
+633,3692522,"loupe, jeweler's loupe"
+634,3697007,"lumbermill, sawmill"
+635,3706229,magnetic compass
+636,3709823,"mailbag, postbag"
+637,3710193,"mailbox, letter box"
+638,3710637,maillot
+639,3710721,"maillot, tank suit"
+640,3717622,manhole cover
+641,3720891,maraca
+642,3721384,"marimba, xylophone"
+643,3724870,mask
+644,3729826,matchstick
+645,3733131,maypole
+646,3733281,"maze, labyrinth"
+647,3733805,measuring cup
+648,3742115,"medicine chest, medicine cabinet"
+649,3743016,"megalith, megalithic structure"
+650,3759954,"microphone, mike"
+651,3761084,"microwave, microwave oven"
+652,3763968,military uniform
+653,3764736,milk can
+654,3769881,minibus
+655,3770439,"miniskirt, mini"
+656,3770679,minivan
+657,3773504,missile
+658,3775071,mitten
+659,3775546,mixing bowl
+660,3776460,"mobile home, manufactured home"
+661,3777568,Model T
+662,3777754,modem
+663,3781244,monastery
+664,3782006,monitor
+665,3785016,moped
+666,3786901,mortar
+667,3787032,mortarboard
+668,3788195,mosque
+669,3788365,mosquito net
+670,3791053,"motor scooter, scooter"
+671,3792782,"mountain bike, all-terrain bike, off-roader"
+672,3792972,mountain tent
+673,3793489,"mouse, computer mouse"
+674,3794056,mousetrap
+675,3796401,moving van
+676,3803284,muzzle
+677,3804744,nail
+678,3814639,neck brace
+679,3814906,necklace
+680,3825788,nipple
+681,3832673,"notebook, notebook computer"
+682,3837869,obelisk
+683,3838899,"oboe, hautboy, hautbois"
+684,3840681,"ocarina, sweet potato"
+685,3841143,"odometer, hodometer, mileometer, milometer"
+686,3843555,oil filter
+687,3854065,"organ, pipe organ"
+688,3857828,"oscilloscope, scope, cathode-ray oscilloscope, CRO"
+689,3866082,overskirt
+690,3868242,oxcart
+691,3868863,oxygen mask
+692,3871628,packet
+693,3873416,"paddle, boat paddle"
+694,3874293,"paddlewheel, paddle wheel"
+695,3874599,padlock
+696,3876231,paintbrush
+697,3877472,"pajama, pyjama, pj's, jammies"
+698,3877845,palace
+699,3884397,"panpipe, pandean pipe, syrinx"
+700,3887697,paper towel
+701,3888257,"parachute, chute"
+702,3888605,"parallel bars, bars"
+703,3891251,park bench
+704,3891332,parking meter
+705,3895866,"passenger car, coach, carriage"
+706,3899768,"patio, terrace"
+707,3902125,"pay-phone, pay-station"
+708,3903868,"pedestal, plinth, footstall"
+709,3908618,"pencil box, pencil case"
+710,3908714,pencil sharpener
+711,3916031,"perfume, essence"
+712,3920288,Petri dish
+713,3924679,photocopier
+714,3929660,"pick, plectrum, plectron"
+715,3929855,pickelhaube
+716,3930313,"picket fence, paling"
+717,3930630,"pickup, pickup truck"
+718,3933933,pier
+719,3935335,"piggy bank, penny bank"
+720,3937543,pill bottle
+721,3938244,pillow
+722,3942813,ping-pong ball
+723,3944341,pinwheel
+724,3947888,"pirate, pirate ship"
+725,3950228,"pitcher, ewer"
+726,3954731,"plane, carpenter's plane, woodworking plane"
+727,3956157,planetarium
+728,3958227,plastic bag
+729,3961711,plate rack
+730,3967562,"plow, plough"
+731,3970156,"plunger, plumber's helper"
+732,3976467,"Polaroid camera, Polaroid Land camera"
+733,3976657,pole
+734,3977966,"police van, police wagon, paddy wagon, patrol wagon, wagon, black Maria"
+735,3980874,poncho
+736,3982430,"pool table, billiard table, snooker table"
+737,3983396,"pop bottle, soda bottle"
+738,3991062,"pot, flowerpot"
+739,3992509,potter's wheel
+740,3995372,power drill
+741,3998194,"prayer rug, prayer mat"
+742,4004767,printer
+743,4005630,"prison, prison house"
+744,4008634,"projectile, missile"
+745,4009552,projector
+746,4019541,"puck, hockey puck"
+747,4023962,"punching bag, punch bag, punching ball, punchball"
+748,4026417,purse
+749,4033901,"quill, quill pen"
+750,4033995,"quilt, comforter, comfort, puff"
+751,4037443,"racer, race car, racing car"
+752,4039381,"racket, racquet"
+753,4040759,radiator
+754,4041544,"radio, wireless"
+755,4044716,"radio telescope, radio reflector"
+756,4049303,rain barrel
+757,4065272,"recreational vehicle, RV, R.V."
+758,4067472,reel
+759,4069434,reflex camera
+760,4070727,"refrigerator, icebox"
+761,4074963,"remote control, remote"
+762,4081281,"restaurant, eating house, eating place, eatery"
+763,4086273,"revolver, six-gun, six-shooter"
+764,4090263,rifle
+765,4099969,"rocking chair, rocker"
+766,4111531,rotisserie
+767,4116512,"rubber eraser, rubber, pencil eraser"
+768,4118538,rugby ball
+769,4118776,"rule, ruler"
+770,4120489,running shoe
+771,4125021,safe
+772,4127249,safety pin
+773,4131690,"saltshaker, salt shaker"
+774,4133789,sandal
+775,4136333,sarong
+776,4141076,"sax, saxophone"
+777,4141327,scabbard
+778,4141975,"scale, weighing machine"
+779,4146614,school bus
+780,4147183,schooner
+781,4149813,scoreboard
+782,4152593,"screen, CRT screen"
+783,4153751,screw
+784,4154565,screwdriver
+785,4162706,"seat belt, seatbelt"
+786,4179913,sewing machine
+787,4192698,"shield, buckler"
+788,4200800,"shoe shop, shoe-shop, shoe store"
+789,4201297,shoji
+790,4204238,shopping basket
+791,4204347,shopping cart
+792,4208210,shovel
+793,4209133,shower cap
+794,4209239,shower curtain
+795,4228054,ski
+796,4229816,ski mask
+797,4235860,sleeping bag
+798,4238763,"slide rule, slipstick"
+799,4239074,sliding door
+800,4243546,"slot, one-armed bandit"
+801,4251144,snorkel
+802,4252077,snowmobile
+803,4252225,"snowplow, snowplough"
+804,4254120,soap dispenser
+805,4254680,soccer ball
+806,4254777,sock
+807,4258138,"solar dish, solar collector, solar furnace"
+808,4259630,sombrero
+809,4263257,soup bowl
+810,4264628,space bar
+811,4265275,space heater
+812,4266014,space shuttle
+813,4270147,spatula
+814,4273569,speedboat
+815,4275548,"spider web, spider's web"
+816,4277352,spindle
+817,4285008,"sports car, sport car"
+818,4286575,"spotlight, spot"
+819,4296562,stage
+820,4310018,steam locomotive
+821,4311004,steel arch bridge
+822,4311174,steel drum
+823,4317175,stethoscope
+824,4325704,stole
+825,4326547,stone wall
+826,4328186,"stopwatch, stop watch"
+827,4330267,stove
+828,4332243,strainer
+829,4335435,"streetcar, tram, tramcar, trolley, trolley car"
+830,4336792,stretcher
+831,4344873,"studio couch, day bed"
+832,4346328,"stupa, tope"
+833,4347754,"submarine, pigboat, sub, U-boat"
+834,4350905,"suit, suit of clothes"
+835,4355338,sundial
+836,4355933,sunglass
+837,4356056,"sunglasses, dark glasses, shades"
+838,4357314,"sunscreen, sunblock, sun blocker"
+839,4366367,suspension bridge
+840,4367480,"swab, swob, mop"
+841,4370456,sweatshirt
+842,4371430,"swimming trunks, bathing trunks"
+843,4371774,swing
+844,4372370,"switch, electric switch, electrical switch"
+845,4376876,syringe
+846,4380533,table lamp
+847,4389033,"tank, army tank, armored combat vehicle, armoured combat vehicle"
+848,4392985,tape player
+849,4398044,teapot
+850,4399382,"teddy, teddy bear"
+851,4404412,"television, television system"
+852,4409515,tennis ball
+853,4417672,"thatch, thatched roof"
+854,4418357,"theater curtain, theatre curtain"
+855,4423845,thimble
+856,4428191,"thresher, thrasher, threshing machine"
+857,4429376,throne
+858,4435653,tile roof
+859,4442312,toaster
+860,4443257,"tobacco shop, tobacconist shop, tobacconist"
+861,4447861,toilet seat
+862,4456115,torch
+863,4458633,totem pole
+864,4461696,"tow truck, tow car, wrecker"
+865,4462240,toyshop
+866,4465501,tractor
+867,4467665,"trailer truck, tractor trailer, trucking rig, rig, articulated lorry, semi"
+868,4476259,tray
+869,4479046,trench coat
+870,4482393,"tricycle, trike, velocipede"
+871,4483307,trimaran
+872,4485082,tripod
+873,4486054,triumphal arch
+874,4487081,"trolleybus, trolley coach, trackless trolley"
+875,4487394,trombone
+876,4493381,"tub, vat"
+877,4501370,turnstile
+878,4505470,typewriter keyboard
+879,4507155,umbrella
+880,4509417,"unicycle, monocycle"
+881,4515003,"upright, upright piano"
+882,4517823,"vacuum, vacuum cleaner"
+883,4522168,vase
+884,4523525,vault
+885,4525038,velvet
+886,4525305,vending machine
+887,4532106,vestment
+888,4532670,viaduct
+889,4536866,"violin, fiddle"
+890,4540053,volleyball
+891,4542943,waffle iron
+892,4548280,wall clock
+893,4548362,"wallet, billfold, notecase, pocketbook"
+894,4550184,"wardrobe, closet, press"
+895,4552348,"warplane, military plane"
+896,4553703,"washbasin, handbasin, washbowl, lavabo, wash-hand basin"
+897,4554684,"washer, automatic washer, washing machine"
+898,4557648,water bottle
+899,4560804,water jug
+900,4562935,water tower
+901,4579145,whiskey jug
+902,4579432,whistle
+903,4584207,wig
+904,4589890,window screen
+905,4590129,window shade
+906,4591157,Windsor tie
+907,4591713,wine bottle
+908,4592741,wing
+909,4596742,wok
+910,4597913,wooden spoon
+911,4599235,"wool, woolen, woollen"
+912,4604644,"worm fence, snake fence, snake-rail fence, Virginia fence"
+913,4606251,wreck
+914,4612504,yawl
+915,4613696,yurt
+916,6359193,"web site, website, internet site, site"
+917,6596364,comic book
+918,6785654,"crossword puzzle, crossword"
+919,6794110,street sign
+920,6874185,"traffic light, traffic signal, stoplight"
+921,7248320,"book jacket, dust cover, dust jacket, dust wrapper"
+922,7565083,menu
+923,7579787,plate
+924,7583066,guacamole
+925,7584110,consomme
+926,7590611,"hot pot, hotpot"
+927,7613480,trifle
+928,7614500,"ice cream, icecream"
+929,7615774,"ice lolly, lolly, lollipop, popsicle"
+930,7684084,French loaf
+931,7693725,"bagel, beigel"
+932,7695742,pretzel
+933,7697313,cheeseburger
+934,7697537,"hotdog, hot dog, red hot"
+935,7711569,mashed potato
+936,7714571,head cabbage
+937,7714990,broccoli
+938,7715103,cauliflower
+939,7716358,"zucchini, courgette"
+940,7716906,spaghetti squash
+941,7717410,acorn squash
+942,7717556,butternut squash
+943,7718472,"cucumber, cuke"
+944,7718747,"artichoke, globe artichoke"
+945,7720875,bell pepper
+946,7730033,cardoon
+947,7734744,mushroom
+948,7742313,Granny Smith
+949,7745940,strawberry
+950,7747607,orange
+951,7749582,lemon
+952,7753113,fig
+953,7753275,"pineapple, ananas"
+954,7753592,banana
+955,7754684,"jackfruit, jak, jack"
+956,7760859,custard apple
+957,7768694,pomegranate
+958,7802026,hay
+959,7831146,carbonara
+960,7836838,"chocolate sauce, chocolate syrup"
+961,7860988,dough
+962,7871810,"meat loaf, meatloaf"
+963,7873807,"pizza, pizza pie"
+964,7875152,potpie
+965,7880968,burrito
+966,7892512,red wine
+967,7920052,espresso
+968,7930864,cup
+969,7932039,eggnog
+970,9193705,alp
+971,9229709,bubble
+972,9246464,"cliff, drop, drop-off"
+973,9256479,coral reef
+974,9288635,geyser
+975,9332890,"lakeside, lakeshore"
+976,9399592,"promontory, headland, head, foreland"
+977,9421951,"sandbar, sand bar"
+978,9428293,"seashore, coast, seacoast, sea-coast"
+979,9468604,"valley, vale"
+980,9472597,volcano
+981,9835506,"ballplayer, baseball player"
+982,10148035,"groom, bridegroom"
+983,10565667,scuba diver
+984,11879895,rapeseed
+985,11939491,daisy
+986,12057211,"yellow lady's slipper, yellow lady-slipper, Cypripedium calceolus, Cypripedium parviflorum"
+987,12144580,corn
+988,12267677,acorn
+989,12620546,"hip, rose hip, rosehip"
+990,12768682,"buckeye, horse chestnut, conker"
+991,12985857,coral fungus
+992,12998815,agaric
+993,13037406,gyromitra
+994,13040303,"stinkhorn, carrion fungus"
+995,13044778,earthstar
+996,13052670,"hen-of-the-woods, hen of the woods, Polyporus frondosus, Grifola frondosa"
+997,13054560,bolete
+998,13133613,"ear, spike, capitulum"
+999,15075141,"toilet tissue, toilet paper, bathroom tissue"
