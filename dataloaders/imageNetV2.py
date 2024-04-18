@@ -4,6 +4,14 @@ import os
 import csv
 
 class ImageNetV2(Dataset):
+    """
+    A custom dataset class for loading images from the ImageNet-V2 dataset.
+
+    Args:
+        root (str): The root directory of the dataset.
+        csvMapFile (str, optional): The path to the CSV file containing the mapping of WordNet IDs to class names. Defaults to "dataloaders/wordNetIDs2Classes.csv".
+        transform (callable, optional): A function/transform that takes in an image and returns a transformed version. Defaults to None.
+    """
     def __init__(self, root, csvMapFile="dataloaders/wordNetIDs2Classes.csv",  transform=None):
         paths = []
         labels = []
@@ -30,7 +38,10 @@ class ImageNetV2(Dataset):
         self.transform = transform
 
     def getClassesNames(self):
-        return self.data['names']
+        """
+        Returns the class names of the dataset.
+        """
+        return set(self.data['names'])
 
     def __len__(self):
         return len(self.data['paths'])

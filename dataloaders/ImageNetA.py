@@ -4,6 +4,14 @@ import os
 import csv
 
 class ImageNetA(Dataset):
+    """
+    A custom dataset class for loading images from the ImageNet-A dataset.
+
+    Args:
+        root (str): The root directory of the dataset.
+        csvMapFile (str, optional): The path to the CSV file containing the mapping of WordNet IDs to class names. Defaults to "dataloaders/wordNetIDs2Classes.csv".
+        transform (callable, optional): A function/transform that takes in an image and returns a transformed version. Defaults to None.
+    """
     def __init__(self, root, csvMapFile="dataloaders/wordNetIDs2Classes.csv", transform=None):
         paths = []
         labels = []
@@ -36,7 +44,10 @@ class ImageNetA(Dataset):
         self.transform = transform
 
     def getClassesNames(self):
-        return self.data['names']
+        """
+        Returns the class names of the dataset.
+        """
+        return set(self.data['names'])
 
     def __len__(self):
         return len(self.data['paths'])
@@ -71,6 +82,9 @@ if __name__ == '__main__':
 
     dataset = ImageNetA(root, transform=transform)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+
+    print(dataset.getClassesNames())
+    
 
     for data in dataloader:
         img = data['img'][0].permute(1, 2, 0)
