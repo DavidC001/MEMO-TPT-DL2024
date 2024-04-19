@@ -249,7 +249,6 @@ class PromptLearner(nn.Module):
                     ],
                     dim=-2,
                 )
-            breakpoint()
         elif self.class_token_position == "middle":
             # TODO: to work with a batch of prompts
             if self.split_idx is not None:
