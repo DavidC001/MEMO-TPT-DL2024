@@ -30,7 +30,7 @@ except ImportError:
     BICUBIC = Image.BICUBIC
 import torchvision.models as models
 
-from clip.custom_clip import get_coop
+from clip.custom_clip import get_model
 from data.imagnet_prompts import imagenet_classes
 from data.datautils import AugMixAugmenter, build_dataset
 from utils.tools import (
@@ -184,7 +184,7 @@ def test_time_adapt_eval(
 if __name__ == "__main__":
 
     args = {
-        "data": "/home/lollo/Downloads/",
+        "data": "datasets",
         "test_sets": "A",
         "dataset_mode": "test",
         "arch": "RN50",
@@ -199,7 +199,6 @@ if __name__ == "__main__":
         "tta_steps": 1,
         "n_ctx": 4,
         "ctx_init": "a_photo_of_a",
-        "cocoop": False,
         "load": None,
         "seed": 0,
     }
@@ -215,7 +214,7 @@ if __name__ == "__main__":
 
     classnames = imagenet_classes
 
-    model = get_coop(
+    model = get_model(
         args["arch"], args["test_sets"], args["gpu"], args["n_ctx"], args["ctx_init"]
     )
 
@@ -294,9 +293,7 @@ if __name__ == "__main__":
     model.reset_classnames(classnames, args["arch"])
 
     # loads the DataLoader TODO: put our own dataloader here
-    val_dataset = build_dataset(
-        set_id, data_transform, args["data"], mode=args["dataset_mode"]
-    )
+    val_dataset = build_dataset(set_id, data_transform, args["data"])
 
     print("number of test samples: {}".format(len(val_dataset)))
     val_loader = torch.utils.data.DataLoader(
@@ -307,17 +304,18 @@ if __name__ == "__main__":
         pin_memory=True,
     )
 
-    # results[set_id] = test_time_adapt_eval(
-    #     val_loader, model, model_state, optimizer, optim_state, scaler, args
-    # )
-
-    imgs, target = next(iter(val_loader))
-
-    out = test_time_single(
-        imgs, model, model_state, optimizer, optim_state, scaler, args
+    results[set_id] = test_time_adapt_eval(
+        val_loader, model, model_state, optimizer, optim_state, scaler, args
     )
 
-    out_id = out.argmax(1).item()
-    target_id = target.item()
-    print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")
-    breakpoint()
+    # while True:
+    #     imgs, target = next(iter(val_loader))
+
+    #     out = test_time_single(
+    #         imgs, model, model_state, optimizer, optim_state, scaler, args
+    #     )
+
+    #     out_id = out.argmax(1).item()
+    #     target_id = target.item()
+
+    #     print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")

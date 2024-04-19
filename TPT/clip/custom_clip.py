@@ -208,6 +208,7 @@ class PromptLearner(nn.Module):
         self.classnames = classnames
 
     def forward(self, init=None):
+
         # the init will be used when computing CLIP directional loss
         if init is not None:
             ctx = init
@@ -248,6 +249,7 @@ class PromptLearner(nn.Module):
                     ],
                     dim=-2,
                 )
+            breakpoint()
         elif self.class_token_position == "middle":
             # TODO: to work with a batch of prompts
             if self.split_idx is not None:
@@ -299,7 +301,6 @@ class PromptLearner(nn.Module):
 
         else:
             raise ValueError
-
         return prompts
 
 
@@ -370,7 +371,7 @@ class ClipTestTimeTuning(nn.Module):
             return self.inference(input)
 
 
-def get_coop(clip_arch, test_set, device, n_ctx, ctx_init, learned_cls=False):
+def get_model(clip_arch, test_set, device, n_ctx, ctx_init, learned_cls=False):
 
     classnames = imagenet_classes
 
