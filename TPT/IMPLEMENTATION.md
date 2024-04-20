@@ -24,12 +24,14 @@ ClipTestTimeTuning is a wrapper around the clip model that allows for prompt tun
 It contains CLIP's text and image encoder and an instance of the PromptLearner class, most of the insiantiation parameters will be directly passed to the PromptLearner class.
 
 ### PromptLearner
-- classnames:   list of all classnames of the dataset
-- batch_size:   basically the number of agumentations + 1
-- n_ctx=16:     context size (in tokens) for the prompt vectors. Keep in mind this will be overwritten if ctx_init is provided
-- ctx_init:     initial context for the prompt vectors (o.g. "a photo of"). If provided, n_ctx will be set to its length.
-- ctx_position: where the class name will be put in the prompt vector, it can be "end", "front" or "middle". If it's "middle" the class name will be put in the posotion of the '[CLS]' token
-- learned_cls: this is for context-dependent visual reasoning so we don't really care.Instead of using a binary label "yes/no" or whatever it will learn the CLS token along with the prompt. For more info check the paper but this could be removed as well.
+| arg          | description                                                                                                                                                                                                                                     |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *classnames*   | list of all classnames of the dataset                                                                                                                                                                                                           |
+| *batch_size*   | used for batch-wise prompt tuning                                                                                                                                                                                                               |
+| *n_ctx*        | context size (in tokens) for the prompt vectors. Keep in mind this will be overwritten if ctx_init is provided                                                                                                                                  |
+| *ctx_init*     | initial context for the prompt vectors (o.g. "a photo of"). If provided, n_ctx will be set to its length                                                                                                                                        |
+| *ctx_position* | where the class name will be put in the prompt vector, it can be "end", "front" or "middle". If it's "middle" the class name will be put in the posotion of the '[ CLS ]' token                                                                 |
+| *learned_cls*  | this is for context-dependent visual reasoning so we don't really care.Instead of using a binary label "yes/no" or whatever it will learn the CLS token along with the prompt. For more info check the paper but this could be removed as well. |
 
 In PromptLearner there's some stuff happening.
 
@@ -53,10 +55,10 @@ At this point we can save the *token_prefix* which should be the tokenized-embed
 
 Basically if we have 200 classes, default CLIP's context length 77 and CLIP's embedding size 512, and a 4 token long prompt like "the photo of a" we will have these shapes:
 
-- *self.ctx* [4, 512] the prompt vector (will be canged by the optim)
-- *self.ctx_init_state* [4, 512] again the prompt vector (will stay untouched and used to reset ctx after each inference)
-- *self.token_prefix* [200, 1, 512] the prefix is empty
-- *self.token_suffix* [200, 72, 512] the suffix the part of the prompt that contains the class name and all the padding
+- *self.ctx* [4, 512] &emsp;the prompt vector (will be canged by the optim)
+- *self.ctx_init_state* [4, 512] &emsp;again the prompt vector (will stay untouched and used to reset ctx after each inference)
+- *self.token_prefix* [200, 1, 512] &emsp;the prefix is empty
+- *self.token_suffix* [200, 72, 512] &emsp;the suffix the part of the prompt that contains the class name and all the padding
 
 
 
