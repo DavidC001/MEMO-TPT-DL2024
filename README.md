@@ -8,3 +8,8 @@ to implement:
 
 global fun:
 - dataset classes and get DataLoader
+
+
+## TPT
+
+Read IMPLEMENTATION.md for an explanation of what's going on.
