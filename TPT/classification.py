@@ -92,7 +92,6 @@ def test_time_tuning(model, inputs, optimizer, scaler, args):
                 output, selected_idx = select_confident_samples(
                     output, args["selection_p"]
                 )
-
             loss = avg_entropy(output)
 
         optimizer.zero_grad()
@@ -107,8 +106,6 @@ def test_time_tuning(model, inputs, optimizer, scaler, args):
 
 def test_time_single(images, model, model_state, optimizer, optim_state, scaler, args):
 
-    top1 = AverageMeter("Acc@1", ":6.2f", Summary.AVERAGE)
-    top5 = AverageMeter("Acc@5", ":6.2f", Summary.AVERAGE)
     # reset model and switch to evaluate mode
     model.eval()
 
@@ -268,12 +265,16 @@ if __name__ == "__main__":
         ]
     )
     preprocess = transforms.Compose([transforms.ToTensor(), normalize])
+
+    # TODO: aumix set to False if set_id is of length 1 (so all imagenet variations)
+    # if aumix is set to false the only
     data_transform = AugMixAugmenter(
         base_transform,
         preprocess,
         n_views=args["batch_size"] - 1,
         augmix=len(set_id) > 1,
     )
+
     # set batch size to 1 again (image is 1 + 63 views)
     batchsize = 1
 
@@ -304,18 +305,18 @@ if __name__ == "__main__":
         pin_memory=True,
     )
 
-    results[set_id] = test_time_adapt_eval(
-        val_loader, model, model_state, optimizer, optim_state, scaler, args
-    )
+    # results[set_id] = test_time_adapt_eval(
+    #     val_loader, model, model_state, optimizer, optim_state, scaler, args
+    # )
 
-    # while True:
-    #     imgs, target = next(iter(val_loader))
+    while True:
+        imgs, target = next(iter(val_loader))
 
-    #     out = test_time_single(
-    #         imgs, model, model_state, optimizer, optim_state, scaler, args
-    #     )
+        out = test_time_single(
+            imgs, model, model_state, optimizer, optim_state, scaler, args
+        )
 
-    #     out_id = out.argmax(1).item()
-    #     target_id = target.item()
+        out_id = out.argmax(1).item()
+        target_id = target.item()
 
-    #     print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")
+        print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")

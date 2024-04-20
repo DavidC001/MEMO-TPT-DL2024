@@ -50,7 +50,6 @@ class TextEncoder(nn.Module):
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x).type(self.dtype)
-
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
         x = (
@@ -114,6 +113,7 @@ class PromptLearner(nn.Module):
         print(f"Number of context words (tokens): {n_ctx}")
 
         # batch-wise prompt tuning for test-time adaptation
+
         if self.batch_size is not None:
             ctx_vectors = ctx_vectors.repeat(batch_size, 1, 1)  # (N, L, D)
         self.ctx_init_state = ctx_vectors.detach().clone()
@@ -123,6 +123,7 @@ class PromptLearner(nn.Module):
             classnames = [name.replace("_", " ") for name in classnames]
             name_lens = [len(_tokenizer.encode(name)) for name in classnames]
             prompts = [prompt_prefix + " " + name + "." for name in classnames]
+
         else:
             print("Random initialization: initializing a learnable class token")
             cls_vectors = torch.empty(
@@ -300,6 +301,7 @@ class PromptLearner(nn.Module):
 
         else:
             raise ValueError
+        # breakpoint()
         return prompts
 
 
@@ -343,6 +345,12 @@ class ClipTestTimeTuning(nn.Module):
         prompts = self.prompt_learner()
         tokenized_prompts = self.prompt_learner.tokenized_prompts
         t_features = self.text_encoder(prompts, tokenized_prompts)
+
+        # TODO: i dont know why there's this stacking and mean happening after
+        # the normalization. (t_features / t_features.norm(dim=-1, keepdim=True)
+        # and torch.mean(text_features, dim=0) appear to be the same
+        # shape and values
+
         text_features.append(t_features / t_features.norm(dim=-1, keepdim=True))
         text_features = torch.stack(text_features, dim=0)
 
@@ -354,13 +362,13 @@ class ClipTestTimeTuning(nn.Module):
 
         text_features = self.get_text_features()
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
-
+        # breakpoint()
         return logits
 
     def forward(self, input):
+
         if isinstance(input, Tuple):
             view_0, view_1, view_2 = input
             return self.contrast_prompt_tuning(view_0, view_1, view_2)
