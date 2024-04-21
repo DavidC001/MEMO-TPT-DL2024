@@ -22,6 +22,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
+import math
 
 
 try:
@@ -313,7 +314,9 @@ if __name__ == "__main__":
 
     results = []
 
-    for _ in range(4):
+    runs = 7
+
+    for _ in range(runs):
         imgs, target = next(iter(val_loader))
         label, path = target
         # breakpoint()
@@ -328,15 +331,17 @@ if __name__ == "__main__":
         results.append([(out_id, target_id), path[0]])
         print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")
 
-    # Visualize the images
-    fig, axs = plt.subplots(2, 2, figsize=(8, 8))
-    for i in range(2):
-        for j in range(2):
-            img_path = results[i * 2 + j][1]
+    fig, axs = plt.subplots(math.ceil(runs / 3), 3, figsize=(8, 8))
+    for i in range(math.ceil(runs / 3)):
+        for j in range(3):
+
+            if i * 3 + j >= runs:
+                break
+            img_path = results[i * 3 + j][1]
             img = Image.open(img_path)
             axs[i, j].imshow(img)
             axs[i, j].axis("off")
-            predicted_id, target_id = results[i * 2 + j][0]
+            predicted_id, target_id = results[i * 3 + j][0]
             axs[i, j].set_title(
                 f"Predicted: {classnames[predicted_id]}\nTarget: {classnames[target_id]}"
             )
