@@ -34,6 +34,26 @@ ID_to_DIRNAME = {
     "aircraft": "fgvc_aircraft",
     "eurosat": "eurosat",
 }
+from typing import Any
+
+
+class DatasetWrapper(datasets.ImageFolder):
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (sample, (target,path)) where target is class_index of the target class nad path the path to the image
+        """
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return sample, (target, path)
 
 
 def build_dataset(
@@ -43,7 +63,7 @@ def build_dataset(
 ):
 
     testdir = os.path.join(data_root, ID_to_DIRNAME[set_id])
-    testset = datasets.ImageFolder(testdir, transform=transform)
+    testset = DatasetWrapper(testdir, transform=transform)
 
     return testset
 

@@ -21,6 +21,8 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
+import matplotlib.pyplot as plt
+
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -309,14 +311,34 @@ if __name__ == "__main__":
     #     val_loader, model, model_state, optimizer, optim_state, scaler, args
     # )
 
-    while True:
-        imgs, target = next(iter(val_loader))
+    results = []
 
+    for _ in range(4):
+        imgs, target = next(iter(val_loader))
+        label, path = target
+        # breakpoint()
         out = test_time_single(
             imgs, model, model_state, optimizer, optim_state, scaler, args
         )
 
         out_id = out.argmax(1).item()
-        target_id = target.item()
+        target_id = label.item()
 
+        # Load and visualize the image
+        results.append([(out_id, target_id), path[0]])
         print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")
+
+    # Visualize the images
+    fig, axs = plt.subplots(2, 2, figsize=(8, 8))
+    for i in range(2):
+        for j in range(2):
+            img_path = results[i * 2 + j][1]
+            img = Image.open(img_path)
+            axs[i, j].imshow(img)
+            axs[i, j].axis("off")
+            predicted_id, target_id = results[i * 2 + j][0]
+            axs[i, j].set_title(
+                f"Predicted: {classnames[predicted_id]}\nTarget: {classnames[target_id]}"
+            )
+    plt.tight_layout()
+    plt.show()
