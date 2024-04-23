@@ -13,8 +13,7 @@ def get_dataloaders(root, transform=None):
         root (str): The root directory of the dataset.
         transform (callable, optional): A function/transform that takes in an image and returns a transformed version. Defaults to None.
     """
-
-    root_A = os.path.join(root, "ImageNet-A")
+    root_A = os.path.join(root, "imagenet-a")
     imageNet_A = ImageNetA(root_A, transform=transform)
     root_V2 = os.path.join(root, "imagenetv2-matched-frequency-format-val")
     imageNet_V2 = ImageNetV2(root_V2, transform=transform)
