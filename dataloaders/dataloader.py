@@ -29,12 +29,12 @@ def get_classes_names(csvMapFile="dataloaders/wordNetIDs2Classes.csv"):
     Args:
         csvMapFile (str, optional): The path to the CSV file containing the mapping of WordNet IDs to class names. Defaults to "dataloaders/wordNetIDs2Classes.csv".
     """
-    names = []
+    names = [""]*1000
     csv_file = csv.reader(open(csvMapFile, 'r'))
     for id, wordnet, name in csv_file:
         if id == 'resnet_label':
             continue
-        names[id] = name
+        names[int(id)] = name
     
     return names
 
@@ -65,5 +65,8 @@ if __name__ == '__main__':
         axs[1, i].set_title(f"{imageV2[idx]['name']} ({imageV2[idx]['label']})")
     
     plt.show()
+
+    print("Classes names:")
+    print(get_classes_names())
 
     print("Done!")
