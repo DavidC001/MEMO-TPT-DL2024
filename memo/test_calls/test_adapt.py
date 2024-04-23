@@ -5,54 +5,49 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
-cudnn.benchmark = True
-
 from tqdm import tqdm
+import copy
+
+cudnn.benchmark = True
 from utils.adapt_helpers import adapt_single, test_single
-from utils.train_helpers import build_model, prepare_loader
+from utils.train_helpers import build_model
+from dataloaders.dataloader import get_dataloaders
+from utils.adapt_helpers import te_transforms
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataroot', required=True)
-parser.add_argument('--use_rvt', action='store_true')
-parser.add_argument('--use_resnext', action='store_true')
-parser.add_argument('--level', default=0, type=int)
-parser.add_argument('--corruption', default='original')
-parser.add_argument('--resume', required=True)
-parser.add_argument('--batch_size', default=64, type=int)
-parser.add_argument('--prior_strength', default=16, type=int)
-parser.add_argument('--optimizer', default='sgd')
-parser.add_argument('--lr', default=0.00025, type=float)
-parser.add_argument('--weight_decay', default=0.0, type=float)
-parser.add_argument('--niter', default=1, type=int)
-args = parser.parse_args()
+def marginal_entropy(outputs):
+    logits = outputs - outputs.logsumexp(dim=-1, keepdim=True)
+    avg_logits = logits.logsumexp(dim=0) - np.log(logits.shape[0])
+    min_real = torch.finfo(avg_logits.dtype).min
+    avg_logits = torch.clamp(avg_logits, min=min_real)
+    return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1), avg_logits
 
 
 def test_adapt():
-    net = build_model(args)
+    model_name = 'resnet'
+    batch_size = 64
+    lr = 0.00025 if model_name == 'resnet' else 0.0001
+    weight_decay = 0 if model_name == 'resnet' else 0.01
+    opt = 'SGD' if model_name == 'resnet' else 'adamw'
+    niter = 1
+    prior_strength = -1
 
-    teset, _ = prepare_loader(args, use_transforms=False)
+    net = build_model(model_name)
 
-    print(f'Resuming from {args.resume}...')
-    ckpt = torch.load(f'{args.resume}/ckpt.pth')
+    imageNet_A, imageNet_V2 = get_dataloaders('datasets', te_transforms)
 
-    def marginal_entropy(outputs):
-        logits = outputs - outputs.logsumexp(dim=-1, keepdim=True)
-        avg_logits = logits.logsumexp(dim=0) - np.log(logits.shape[0])
-        min_real = torch.finfo(avg_logits.dtype).min
-        avg_logits = torch.clamp(avg_logits, min=min_real)
-        return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1), avg_logits
-
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    if args.optimizer == 'adamw':
-        optimizer = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay)
+    if opt == 'adamw':
+        optimizer = optim.AdamW(net.parameters(), lr=lr, weight_decay=weight_decay)
 
     print('Running...')
     correct = []
-    for i in tqdm(range(len(teset))):
-        net.load_state_dict(ckpt['state_dict'])
-        image, label = teset[i]
-        adapt_single(net, image, optimizer, marginal_entropy, args.niter, args.batch_size, args.prior_strength)
-        correct.append(test_single(net, image, label, args.corruption, args.prior_strength)[0])
+    for i in tqdm(range(len(imageNet_A))):
+        net2 = copy.deepcopy(net)
+        data = imageNet_A[i]
+        image = data["img"]
+        label = data["label"]
+        adapt_single(net2, image, optimizer, marginal_entropy, niter, batch_size, prior_strength)
+        correct.append(test_single(net2, image, label, prior_strength)[0])
 
     print(f'MEMO adapt test error {(1 - np.mean(correct)) * 100:.2f}')
