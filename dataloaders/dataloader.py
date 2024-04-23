@@ -1,6 +1,7 @@
 import sys
 sys.path.append('.')
 import os
+import csv
 
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
@@ -20,6 +21,23 @@ def get_dataloaders(root, transform=None):
     imageNet_V2 = ImageNetV2(root_V2, transform=transform)
 
     return imageNet_A, imageNet_V2
+
+def get_classes_names(csvMapFile="dataloaders/wordNetIDs2Classes.csv"):
+    """
+    Returns the class names of the dataset.
+
+    Args:
+        csvMapFile (str, optional): The path to the CSV file containing the mapping of WordNet IDs to class names. Defaults to "dataloaders/wordNetIDs2Classes.csv".
+    """
+    names = []
+    csv_file = csv.reader(open(csvMapFile, 'r'))
+    for id, wordnet, name in csv_file:
+        if id == 'resnet_label':
+            continue
+        names[id] = name
+    
+    return names
+
 
 if __name__ == '__main__':    
     import matplotlib.pyplot as plt
