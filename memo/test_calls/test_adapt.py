@@ -28,7 +28,7 @@ def marginal_entropy(outputs):
 
 def test_adapt():
     model_name = 'resnet'
-    batch_size = 8
+    batch_size = 64
     lr = 0.00025 if model_name == 'resnet' else 0.0001
     weight_decay = 0 if model_name == 'resnet' else 0.01
     opt = 'SGD' if model_name == 'resnet' else 'adamw'
@@ -52,5 +52,17 @@ def test_adapt():
         label = data["label"]
         adapt_single(net2, image, optimizer, marginal_entropy, niter, batch_size, prior_strength)
         correct.append(test_single(net2, image, label, prior_strength)[0])
+    
+    print(f'MEMO adapt test error A {(1 - np.mean(correct)) * 100:.2f}')
 
-    print(f'MEMO adapt test error {(1 - np.mean(correct)) * 100:.2f}')
+    correct = []
+    for i in tqdm(range(len(imageNet_V2))):
+        net2 = copy.deepcopy(net)
+        data = imageNet_A[i]
+        image = data["img"]
+        label = data["label"]
+        adapt_single(net2, image, optimizer, marginal_entropy, niter, batch_size, prior_strength)
+        correct.append(test_single(net2, image, label, prior_strength)[0])
+    
+    print(f'MEMO adapt test error V2 {(1 - np.mean(correct)) * 100:.2f}')
+
