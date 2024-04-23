@@ -1,12 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.utils.data
-import torchvision.transforms as transforms
 import torchvision.models as models
 import sys
-sys.path.append('.')
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+sys.path.append('.')
 
 # https://github.com/bethgelab/robustness/blob/main/robusta/batchnorm/bn.py#L175
 def _modified_bn_forward(self, input):
@@ -18,12 +16,12 @@ def _modified_bn_forward(self, input):
     return nn.functional.batch_norm(input, running_mean, running_var, self.weight, self.bias, False, 0, self.eps)
 
 
-def build_model(model_name, prior_strength=-1):
+def build_model(model_name, device, prior_strength=-1):
     if model_name == 'resnext':
-        net = models.resnext101_32x8d().to(device=DEVICE)
+        net = models.resnext101_32x8d().to(device=device)
     else:
         net = models.resnet50()
-    net = torch.nn.DataParallel(net).to(device=DEVICE)
+    net = torch.nn.DataParallel(net).to(device=device)
 
     if prior_strength >= 0:
         print('modifying BN forward pass')
