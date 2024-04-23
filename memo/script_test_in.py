@@ -1,6 +1,6 @@
 import sys
 sys.path.append('.')
-from test_calls.test_adapt import test_adapt
+from memo.test_calls.test_adapt import test_adapt
 
 dataroot = '/path/to/imagenet/datasets/'  # EDIT THIS
 

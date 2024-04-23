@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+
 import argparse
 
 import numpy as np
@@ -9,10 +12,10 @@ from tqdm import tqdm
 import copy
 
 cudnn.benchmark = True
-from utils.adapt_helpers import adapt_single, test_single
-from utils.train_helpers import build_model
+from memo.utils.adapt_helpers import adapt_single, test_single
+from memo.utils.train_helpers import build_model
 from dataloaders.dataloader import get_dataloaders
-from utils.adapt_helpers import te_transforms
+from memo.utils.adapt_helpers import te_transforms
 
 
 def marginal_entropy(outputs):
@@ -25,7 +28,7 @@ def marginal_entropy(outputs):
 
 def test_adapt():
     model_name = 'resnet'
-    batch_size = 64
+    batch_size = 8
     lr = 0.00025 if model_name == 'resnet' else 0.0001
     weight_decay = 0 if model_name == 'resnet' else 0.01
     opt = 'SGD' if model_name == 'resnet' else 'adamw'

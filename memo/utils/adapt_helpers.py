@@ -3,12 +3,9 @@ import torch.nn as nn
 from torchvision.transforms import v2
 import torchvision.transforms as transforms
 from matplotlib import pyplot as plt
-import sys
 
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-sys.path.append('.')
 
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 te_transforms = transforms.Compose([transforms.ToPILImage(),
