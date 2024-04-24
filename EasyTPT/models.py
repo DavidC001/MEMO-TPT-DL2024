@@ -124,12 +124,12 @@ class EasyPromptLearner(nn.Module):
 
 
 class EasyTPT(nn.Module):
-    def __init__(self, device, base_prompt="a photo of a [CLS]"):
+    def __init__(self, device, base_prompt="a photo of a [CLS]", arch="RN50"):
         super(EasyTPT, self).__init__()
         self.device = device
 
         ###TODO: tobe parametrized
-        arch = "RN50"
+
         DOWNLOAD_ROOT = "~/.cache/clip"
         ###
 
