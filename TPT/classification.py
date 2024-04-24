@@ -96,7 +96,7 @@ def test_time_tuning(model, inputs, optimizer, scaler, args):
                     output, args["selection_p"]
                 )
             loss = avg_entropy(output)
-
+        breakpoint()
         optimizer.zero_grad()
         # compute gradient and do SGD step
         scaler.scale(loss).backward()
@@ -133,7 +133,6 @@ def test_time_single(images, model, model_state, optimizer, optim_state, scaler,
     with torch.no_grad():
         with torch.cuda.amp.autocast():
             output = model(image)
-
     return output
 
 
@@ -196,9 +195,9 @@ if __name__ == "__main__":
         "gpu": 0,
         "tpt": True,
         "selection_p": 0.1,
-        "tta_steps": 1,
+        "tta_steps": 3,
         "n_ctx": 4,
-        "ctx_init": "a_photo_of_a",
+        "ctx_init": "a_photo_of_a_[CLS]_with_ground",
         "load": None,
         "seed": 0,
     }
@@ -222,6 +221,7 @@ if __name__ == "__main__":
     for name, param in model.named_parameters():
         if "prompt_learner" not in name:
             param.requires_grad_(False)
+        print("param: ", name)
 
     print("=> Model created: visual backbone {}".format(args["arch"]))
 
@@ -314,7 +314,7 @@ if __name__ == "__main__":
 
     results = []
 
-    runs = 7
+    runs = 15
 
     for _ in range(runs):
         imgs, target = next(iter(val_loader))
@@ -326,7 +326,9 @@ if __name__ == "__main__":
 
         out_id = out.argmax(1).item()
         target_id = label.item()
-
+        # plt.imshow(out.cpu().detach().numpy(), cmap="hot", interpolation="nearest")
+        # plt.colorbar()
+        # plt.show()
         # Load and visualize the image
         results.append([(out_id, target_id), path[0]])
         print(f"Predicted: {classnames[out_id]}, Target: {classnames[target_id]}")
