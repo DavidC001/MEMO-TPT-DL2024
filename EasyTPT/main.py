@@ -18,8 +18,16 @@ from PIL import Image
 
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
-
+from dataloaders.dataloader import get_classes_names
 from models import EasyTPT
+
+
+def select_confident_samples(logits, top):
+    batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
+    idx = torch.argsort(batch_entropy, descending=False)[
+        : int(batch_entropy.size()[0] * top)
+    ]
+    return logits[idx], idx
 
 
 def avg_entropy(outputs):
@@ -43,6 +51,10 @@ def test_time_tuning(model, inputs, optimizer):
         # print("NaN1? ", model.prompt_learner.emb_prefix[0][0][0].isnan().item())
 
         output = model(inputs)
+        if selected_idx is not None:
+            output = output[selected_idx]
+        else:
+            output, selected_idx = select_confident_samples(output, 0.10)
 
         loss = avg_entropy(output)
 
@@ -61,7 +73,7 @@ def test_time_tuning(model, inputs, optimizer):
 
 device = "cuda:0"
 
-tpt = EasyTPT(device)
+tpt = EasyTPT(device, arch="RN50")
 
 
 for name, param in tpt.named_parameters():
@@ -82,21 +94,17 @@ dataset = ImageNetA(ima_root, transform=transform)
 # imv_root = "datasets/imagenetv2-matched-frequency-format-val"
 # dataset = ImageNetV2(imv_root, transform=transform)
 
-all_classes = dataset.getClassesNames()
+my_classes = dataset.getClassesNames()
+all_classnames = get_classes_names()
 
+a_classes = [(i, name) for i, name in enumerate(all_classnames) if name in my_classes]
+a_classnames = [name for name in all_classnames if name in my_classes]
 
 # NCLASSES = 200
 NAUG = 63
 NSAMPLES = 2000
 
-idxs = [random.randint(0, len(dataset) - 1) for _ in range(NSAMPLES)]
-# idxs = [i for i in range(NCLASSES)]
-elements = [dataset[idx] for idx in idxs]
-images = [element["img"] for element in elements]
-labels = [element["label"] for element in elements]
-classnames = [element["name"] for element in elements]
 
-prep = [tpt.preprocess(image) for image in images]
 trans = transforms.Compose(
     [
         transforms.RandomResizedCrop(224),
@@ -104,7 +112,8 @@ trans = transforms.Compose(
     ]
 )
 
-tpt.prompt_learner.prepare_prompts(all_classes)
+
+tpt.prompt_learner.prepare_prompts(a_classnames)
 
 # setup automatic mixed-precision (Amp) loss scaling
 scaler = torch.cuda.amp.GradScaler(init_scale=1000)
@@ -121,13 +130,22 @@ optimizer = torch.optim.AdamW(trainable_param, LR)
 optim_state = deepcopy(optimizer.state_dict())
 
 correct = 0
-# breakpoint()
-for i, label in enumerate(labels):
 
-    augs = [prep[i]] + [trans(prep[i]) for _ in range(NAUG)]
-    prep_imgs = torch.tensor(np.stack(augs)).cuda()
+# dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+cnt = 0
 
-    # prep_img = prep[i].unsqueeze(0).cuda()
+NTESTS = 100
+
+for _ in range(NTESTS):
+
+    data = dataset[choice(range(len(dataset)))]
+    img = data["img"]
+    label = data["label"]
+    name = data["name"]
+
+    img_prep = tpt.preprocess(img)
+    augs = [img_prep] + [trans(img_prep) for _ in range(NAUG)]
+    prep_imgs = torch.stack(augs).cuda()
 
     # for name, param in tpt.named_parameters():
     #     if "prompt_learner" in name:
@@ -141,24 +159,26 @@ for i, label in enumerate(labels):
     optimizer.load_state_dict(optim_state)
     test_time_tuning(tpt, prep_imgs, optimizer)
     with torch.no_grad():
-        out = tpt(torch.tensor(prep[i]).unsqueeze(0).cuda())
+        out = tpt(img_prep.unsqueeze(0).cuda())
     out_id = out.argmax(1).item()
 
-    if out_id == i:
+    og_label, og_classname = a_classes[out_id]
+
+    if og_label == int(label):
         correct += 1
 
-    print(f"Predicted: {classnames[out_id]}\nTarget: {classnames[i]}")
-    breakpoint()
-    acc = correct / (i + 1)
-    print(f"Accuracy: {acc}")
+    print(f"Predicted: {og_classname}\nTarget: {name}")
+    cnt += 1
+    acc = correct / (cnt)
+    print(f"Accuracy: {acc} after {cnt} samples")
     # plt.imshow(out.cpu().detach().numpy(), cmap="hot", interpolation="nearest")
     # plt.colorbar()
     # plt.show()
-    og_img = cv.cvtColor(np.array(images[i]), cv.COLOR_RGB2BGR)
-    cv.imshow("image", cv.cvtColor(np.array(images[i]), cv.COLOR_RGB2BGR))
-    cv.waitKey(1)
-for i, label in enumerate(labels):
-    print(f"Image {i} belongs to class {label}")
+    # og_img = cv.cvtColor(np.array(images[i]), cv.COLOR_RGB2BGR)
+    # cv.imshow("image", cv.cvtColor(np.array(images[i]), cv.COLOR_RGB2BGR))
+    # cv.waitKey(1)
+# for i, label in enumerate(labels):
+#     print(f"Image {i} belongs to class {label}")
 
 # Plot the scores
 
