@@ -80,13 +80,16 @@ class EasyPromptLearner(nn.Module):
 
         self.pre_init_state = self.emb_prefix.detach().clone()
         self.suf_init_state = self.emb_suffix.detach().clone()
-        
 
     def build_ctx(self):
         prompts = []
         for i in range(self.cls_num):
-            pad_size = self.emb_cls.shape[1] - (self.emb_prefix.shape[1] + self.indc[i].item() + self.emb_suffix.shape[1])
-            
+            pad_size = self.emb_cls.shape[1] - (
+                self.emb_prefix.shape[1]
+                + self.indc[i].item()
+                + self.emb_suffix.shape[1]
+            )
+
             prompt = torch.cat(
                 (
                     self.emb_sot,
@@ -96,7 +99,7 @@ class EasyPromptLearner(nn.Module):
                     self.emb_eot,
                     self.emb_pad[:, :pad_size],
                 ),
-                dim=1
+                dim=1,
             )
             prompts.append(prompt)
         prompts = torch.cat(prompts, dim=0)
@@ -112,13 +115,16 @@ class EasyPromptLearner(nn.Module):
         # self.ctx = ctx_vectors.detach().clone()
         pre_ctx = self.pre_init_state
         suf_ctx = self.suf_init_state
-        #copy
-        self.emb_prefix.data = pre_ctx
-        self.emb_suffix.data = suf_ctx
+        # copy
+        # self.emb_prefix.data = pre_ctx
+        # self.emb_suffix.data = suf_ctx
+
+        self.emb_prefix.copy_(pre_ctx)  # to be optimized
+        self.emb_suffix.copy_(suf_ctx)  # to be optimized
 
 
 class EasyTPT(nn.Module):
-    def __init__(self, device, base_prompt="a photo of [CLS] with ground"):
+    def __init__(self, device, base_prompt="a photo of a [CLS]"):
         super(EasyTPT, self).__init__()
         self.device = device
 
