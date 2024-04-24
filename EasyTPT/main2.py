@@ -75,35 +75,37 @@ else:
     torch.cuda.set_device(device)
     tpt = tpt.cuda(device)
 
-transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize((224, 224))])
+transform = transforms.Compose(
+    [transforms.ToPILImage(), transforms.Resize((224, 224)), transforms.ToTensor()]
+)
 ima_root = "datasets/imagenet-a"
 dataset = ImageNetA(ima_root, transform=transform)
 
 # imv_root = "datasets/imagenetv2-matched-frequency-format-val"
 # dataset = ImageNetV2(imv_root, transform=transform)
 
-all_classes = dataset.getClassesNames()
+all_classes, mapping = dataset.getClassesNames()
 
+breakpoint()
 
 # NCLASSES = 200
 NAUG = 63
 NSAMPLES = 2000
 
-idxs = [random.randint(0, len(dataset) - 1) for _ in range(NSAMPLES)]
-# idxs = [i for i in range(NCLASSES)]
-elements = [dataset[idx] for idx in idxs]
-images = [element["img"] for element in elements]
-labels = [element["label"] for element in elements]
-classnames = [element["name"] for element in elements]
+# idxs = [random.randint(0, len(dataset) - 1) for _ in range(NSAMPLES)]
+# # idxs = [i for i in range(NCLASSES)]
+# elements = [dataset[idx] for idx in idxs]
+# images = [element["img"] for element in elements]
+# labels = [element["label"] for element in elements]
+# classnames = [element["name"] for element in elements]
 
-prep = [tpt.preprocess(image) for image in images]
+# prep = [tpt.preprocess(image) for image in images]
 trans = transforms.Compose(
     [
         transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
     ]
 )
-
 tpt.prompt_learner.prepare_prompts(all_classes)
 
 # setup automatic mixed-precision (Amp) loss scaling
@@ -121,13 +123,15 @@ optimizer = torch.optim.AdamW(trainable_param, LR)
 optim_state = deepcopy(optimizer.state_dict())
 
 correct = 0
-# breakpoint()
-for i, label in enumerate(labels):
 
-    augs = [prep[i]] + [trans(prep[i]) for _ in range(NAUG)]
-    prep_imgs = torch.tensor(np.stack(augs)).cuda()
+dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+for dat in dataloader:
+    img = dat["img"]
+    label = int(dat["label"][0])
+    name = dat["name"][0]
 
-    # prep_img = prep[i].unsqueeze(0).cuda()
+    augs = [img] + [trans(img) for _ in range(NAUG)]
+    prep_imgs = torch.tensor(np.stack(augs)).squeeze(1).cuda()
 
     # for name, param in tpt.named_parameters():
     #     if "prompt_learner" in name:
@@ -141,9 +145,10 @@ for i, label in enumerate(labels):
     optimizer.load_state_dict(optim_state)
     test_time_tuning(tpt, prep_imgs, optimizer)
     with torch.no_grad():
-        out = tpt(torch.tensor(prep[i]).unsqueeze(0).cuda())
+        out = tpt(img.cuda())
     out_id = out.argmax(1).item()
 
+    breakpoint()
     if out_id == i:
         correct += 1
 
