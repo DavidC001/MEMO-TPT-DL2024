@@ -16,15 +16,15 @@ def _modified_bn_forward(self, input):
     return nn.functional.batch_norm(input, running_mean, running_var, self.weight, self.bias, False, 0, self.eps)
 
 
-def build_model(model_name, device, prior_strength=-1):
+def build_model(model_name, device, prior_strength=1):
     if model_name == 'resnext':
         net = models.resnext101_32x8d().to(device=device)
     else:
         net = models.resnet50()
     net = torch.nn.DataParallel(net).to(device=device)
 
-    if prior_strength >= 0:
-        print('modifying BN forward pass')
-        nn.BatchNorm2d.prior = float(prior_strength) / float(prior_strength + 1)
-        nn.BatchNorm2d.forward = _modified_bn_forward
+    print('modifying BN forward pass')
+    nn.BatchNorm2d.prior = prior_strength
+    nn.BatchNorm2d.forward = _modified_bn_forward
+    
     return net

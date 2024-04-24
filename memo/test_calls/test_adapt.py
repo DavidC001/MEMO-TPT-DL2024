@@ -14,6 +14,8 @@ from memo.utils.train_helpers import build_model
 from dataloaders.dataloader import get_dataloaders
 from memo.utils.adapt_helpers import te_transforms
 
+#TODO: change functions names to include memo to avoid conflicts
+#TODO: change to passed device
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -26,15 +28,7 @@ def marginal_entropy(outputs):
 
 
 def test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_strength):
-    model_name = 'resnet'
-    batch_size = 8
-    lr = 0.00025 if model_name == 'resnet' else 0.0001
-    weight_decay = 0 if model_name == 'resnet' else 0.01
-    opt = 'SGD' if model_name == 'resnet' else 'adamw'
-    niter = 1
-    prior_strength = -1
-
-    net = build_model(model_name, DEVICE)
+    net = build_model(model_name=model_name, device=DEVICE, prior_strength=prior_strength)
 
     imageNet_A, imageNet_V2 = get_dataloaders('datasets', te_transforms)
 

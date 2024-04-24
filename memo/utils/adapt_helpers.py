@@ -15,10 +15,8 @@ def adapt_single(model, image, optimizer, criterion, niter, batch_size, prior_st
     model.eval()
     # Using AugMix augmentation provided directly by pytorch
     augmenter = v2.AugMix()
-    if prior_strength < 0:
-        nn.BatchNorm2d.prior = 1
-    else:
-        nn.BatchNorm2d.prior = float(prior_strength) / float(prior_strength + 1)
+
+    nn.BatchNorm2d.prior = prior_strength
 
     for iteration in range(niter):
         inputs = [augmenter(image) for _ in range(batch_size)]
@@ -33,16 +31,12 @@ def adapt_single(model, image, optimizer, criterion, niter, batch_size, prior_st
 
 def test_single(model, image, label, prior_strength, device):
     model.eval()
+    nn.BatchNorm2d.prior = prior_strength
 
-    if prior_strength < 0:
-        nn.BatchNorm2d.prior = 1
-    else:
-        nn.BatchNorm2d.prior = float(prior_strength) / float(prior_strength + 1)
-    transform = te_transforms
-    inputs = transform(image).unsqueeze(0)
+    image = image.unsqueeze(0)
 
     with torch.no_grad():
-        outputs = model(inputs.to(device=device))
+        outputs = model(image.to(device=device))
         _, predicted = outputs.max(1)
         confidence = nn.functional.softmax(outputs, dim=1).squeeze()[predicted].item()
     correctness = 1 if predicted.item() == label else 0
