@@ -18,9 +18,11 @@ def _modified_bn_forward(self, input):
 
 def build_model(model_name, device, prior_strength=1):
     if model_name == 'resnext':
-        net = models.resnext101_32x8d().to(device=device)
+        weights = models.ResNeXt101_32X8D_Weights.DEFAULT
+        net = models.resnext101_32x8d(weights=weights).to(device=device)
     else:
-        net = models.resnet50()
+        weights = models.ResNet50_Weights.DEFAULT
+        net = models.resnet50(weights=weights)
     net = torch.nn.DataParallel(net).to(device=device)
 
     print('modifying BN forward pass')
