@@ -15,7 +15,6 @@ class EasyPromptLearner(nn.Module):
         self.base_prompt = base_prompt
         self.clip = clip
         self.tkn_embedder = clip.token_embedding
-        self.dtype = clip.dtype
 
     def prepare_prompts(self, classnames):
         print("[PromptLearner] Preparing prompts")
@@ -58,12 +57,12 @@ class EasyPromptLearner(nn.Module):
 
         # gets the embeddings
         with torch.no_grad():
-            self.emb_sot = self.tkn_embedder(self.tkn_sot).type(self.dtype)
-            self.emb_prefix = self.tkn_embedder(self.tkn_prefix).type(self.dtype)
-            self.emb_suffix = self.tkn_embedder(self.tkn_suffix).type(self.dtype)
-            self.emb_eot = self.tkn_embedder(self.tkn_eot).type(self.dtype)
-            self.emb_cls = self.tkn_embedder(self.tkn_cls).type(self.dtype)
-            self.emb_pad = self.tkn_embedder(self.tkn_pad).type(self.dtype)
+            self.emb_sot = self.tkn_embedder(self.tkn_sot)
+            self.emb_prefix = self.tkn_embedder(self.tkn_prefix)
+            self.emb_suffix = self.tkn_embedder(self.tkn_suffix)
+            self.emb_eot = self.tkn_embedder(self.tkn_eot)
+            self.emb_cls = self.tkn_embedder(self.tkn_cls)
+            self.emb_pad = self.tkn_embedder(self.tkn_pad)
 
         # take out the embeddings of the class tokens (they are different lenghts)
         self.all_cls = []
@@ -75,38 +74,32 @@ class EasyPromptLearner(nn.Module):
         self.tkn_prompts = tokenize(txt_prompts)
 
         # set the inital context, this will be reused at every new inference
-        learnable_ctx = torch.cat((self.emb_prefix, self.emb_suffix), dim=1)
-
-        self.ctx_init_state = learnable_ctx.detach().clone()
         # this is the context that will be optimized
-        self.ctx = nn.Parameter(learnable_ctx)
+        self.emb_prefix = nn.Parameter(self.emb_prefix)
+        self.emb_suffix = nn.Parameter(self.emb_suffix)
+
+        self.pre_init_state = self.emb_prefix.detach().clone()
+        self.suf_init_state = self.emb_suffix.detach().clone()
+        
 
     def build_ctx(self):
-
-        # where the ctx gets split between prefix and suffix
-        splt_idx = self.emb_prefix.shape[1] - 1
-
-        # creates tensor for prompt embeddings
-        emb_prompts = torch.zeros(self.emb_cls.shape, dtype=torch.float16)
-        emb_prompts = emb_prompts.cuda(self.device)
-
         prompts = []
         for i in range(self.cls_num):
-
-            pad_size = self.emb_cls.shape[1] - (self.ctx.shape[1] + self.indc[i].item())
+            pad_size = self.emb_cls.shape[1] - (self.emb_prefix.shape[1] + self.indc[i].item() + self.emb_suffix.shape[1])
+            
             prompt = torch.cat(
                 (
                     self.emb_sot,
-                    self.ctx[:, : splt_idx + 1],
+                    self.emb_prefix,
                     self.all_cls[i].unsqueeze(0),
-                    self.ctx[:, splt_idx + 1 :],
+                    self.emb_suffix,
                     self.emb_eot,
                     self.emb_pad[:, :pad_size],
                 ),
-                dim=1,
+                dim=1
             )
             prompts.append(prompt)
-        prompts = torch.cat(prompts, dim=0).squeeze(0)
+        prompts = torch.cat(prompts, dim=0)
 
         return prompts
 
@@ -117,9 +110,11 @@ class EasyPromptLearner(nn.Module):
     def reset(self):
         # ctx_vectors = self.init_ctx
         # self.ctx = ctx_vectors.detach().clone()
-
-        ctx_vectors = self.ctx_init_state
-        self.ctx.copy_(ctx_vectors)  # to be optimized
+        pre_ctx = self.pre_init_state
+        suf_ctx = self.suf_init_state
+        #copy
+        self.emb_prefix.data = pre_ctx
+        self.emb_suffix.data = suf_ctx
 
 
 class EasyTPT(nn.Module):
@@ -137,6 +132,7 @@ class EasyTPT(nn.Module):
         # Load clip
         clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
         self.clip = clip
+        self.dtype = clip.dtype
         self.image_encoder = clip.encode_image
         self.text_encoder = clip.encode_text
 
@@ -169,11 +165,11 @@ class EasyTPT(nn.Module):
         return similarity
 
     def custom_encoder(self, prompts, tokenized_prompts):
-        x = prompts + self.clip.positional_embedding.type(self.clip.dtype)
-        x = x.permute(1, 0, 2)  # NLD -> LND
+        x = prompts + self.clip.positional_embedding
+        x = x.permute(1, 0, 2).type(self.dtype)  # NLD -> LND
         x = self.clip.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.clip.ln_final(x).type(self.clip.dtype)
+        x = self.clip.ln_final(x).type(self.dtype)
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
         x = (

@@ -32,12 +32,12 @@ def avg_entropy(outputs):
 
 
 def test_time_tuning(model, inputs, optimizer):
-
+    model.eval()
     selected_idx = None
     for j in range(5):
         # with torch.cuda.amp.autocast():
         print(f"[TTT] Iteration {j}")
-        print("NaN? ", model.prompt_learner.ctx[0][0][0].isnan().item())
+        print("NaN1? ", model.prompt_learner.emb_prefix[0][0][0].isnan().item())
 
         output = model(inputs)
 
@@ -46,6 +46,7 @@ def test_time_tuning(model, inputs, optimizer):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        #breakpoint()
 
     # scaler.scale(loss).backward()
     # # Unscales the gradients of optimizer's assigned params in-place
