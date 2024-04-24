@@ -53,7 +53,8 @@ class ImageNetV2(Dataset):
 
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = self.transform(img)
+        if self.transform is not None:
+            img = self.transform(img)
 
         return {
             'img': img,
