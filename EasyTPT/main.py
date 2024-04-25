@@ -42,10 +42,10 @@ def avg_entropy(outputs):
     return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
 
 
-def test_time_tuning(model, inputs, optimizer):
+def test_time_tuning(model, inputs, optimizer, ttt_steps=4):
     model.eval()
     selected_idx = None
-    for j in range(5):
+    for j in range(ttt_steps):
         # with torch.cuda.amp.autocast():
         # print(f"[TTT] Iteration {j}")
         # print("NaN1? ", model.prompt_learner.emb_prefix[0][0][0].isnan().item())
@@ -73,7 +73,7 @@ def test_time_tuning(model, inputs, optimizer):
 
 device = "cuda:0"
 
-tpt = EasyTPT(device, arch="RN50")
+tpt = EasyTPT(device, base_prompt="a photo of [CLS]", arch="RN50")
 
 
 for name, param in tpt.named_parameters():
@@ -120,25 +120,27 @@ scaler = torch.cuda.amp.GradScaler(init_scale=1000)
 
 print("=> Using native Torch AMP. Training in mixed precision.")
 
-import cv2 as cv
+# import cv2 as cv
 
-cv.namedWindow("image", cv.WINDOW_NORMAL)
+# cv.namedWindow("image", cv.WINDOW_NORMAL)
 
 LR = 0.005
 trainable_param = tpt.prompt_learner.parameters()
 optimizer = torch.optim.AdamW(trainable_param, LR)
 optim_state = deepcopy(optimizer.state_dict())
-
+# breakpoint()
 correct = 0
-
-# dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 cnt = 0
 
 NTESTS = 100
 
-for _ in range(NTESTS):
+idxs = list(range(len(dataset)))
 
-    data = dataset[choice(range(len(dataset)))]
+for _ in range(len(idxs)):
+
+    idx = choice(idxs)
+    idxs.remove(idx)
+    data = dataset[idx]
     img = data["img"]
     label = data["label"]
     name = data["name"]
@@ -157,7 +159,8 @@ for _ in range(NTESTS):
         tpt.reset()
 
     optimizer.load_state_dict(optim_state)
-    test_time_tuning(tpt, prep_imgs, optimizer)
+    TTT_STEPS = 1
+    test_time_tuning(tpt, prep_imgs, optimizer, ttt_steps=TTT_STEPS)
     with torch.no_grad():
         out = tpt(img_prep.unsqueeze(0).cuda())
     out_id = out.argmax(1).item()
@@ -167,7 +170,7 @@ for _ in range(NTESTS):
     if og_label == int(label):
         correct += 1
 
-    print(f"Predicted: {og_classname}\nTarget: {name}")
+    print(f"Predicted: \t{og_classname}\nTarget: \t{name}")
     cnt += 1
     acc = correct / (cnt)
     print(f"Accuracy: {acc} after {cnt} samples")
@@ -181,6 +184,6 @@ for _ in range(NTESTS):
 #     print(f"Image {i} belongs to class {label}")
 
 # Plot the scores
-
-
+print(f"Final accuracy: {correct / cnt}")
+print(f"{correct} correct predictions out of {cnt} samples.")
 breakpoint()

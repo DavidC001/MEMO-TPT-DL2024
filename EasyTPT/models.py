@@ -8,7 +8,7 @@ from clip import load, tokenize
 
 
 class EasyPromptLearner(nn.Module):
-    def __init__(self, device, clip, base_prompt="a photo of [CLS] with ground"):
+    def __init__(self, device, clip, base_prompt="a photo of [CLS]"):
         super().__init__()
 
         self.device = device
@@ -18,8 +18,12 @@ class EasyPromptLearner(nn.Module):
 
     def prepare_prompts(self, classnames):
         print("[PromptLearner] Preparing prompts")
+
+        self.classnames = classnames
+        # self.classnames = [cls.split(",")[0] for cls in self.classnames]
+
         # get numbr of classes
-        self.cls_num = len(classnames)
+        self.cls_num = len(self.classnames)
 
         # get prompt text prefix and suffix
         txt_prefix = self.base_prompt.split("[CLS]")[0]
@@ -29,7 +33,7 @@ class EasyPromptLearner(nn.Module):
         tkn_prefix = tokenize(txt_prefix)
         tkn_suffix = tokenize(txt_suffix)
         tkn_pad = tokenize("")
-        tkn_cls = tokenize(classnames)
+        tkn_cls = tokenize(self.classnames)
 
         # get the index of the last element of the prefix and suffix
         idx = torch.arange(tkn_prefix.shape[1], 0, -1)
@@ -70,8 +74,10 @@ class EasyPromptLearner(nn.Module):
             self.all_cls.append(self.emb_cls[i][1 : self.indc[i] - 1])
 
         # prepare the prompts, they are needed for text encoding
-        txt_prompts = [self.base_prompt.replace("[CLS]", cls) for cls in classnames]
-        self.tkn_prompts = tokenize(txt_prompts)
+        self.txt_prompts = [
+            self.base_prompt.replace("[CLS]", cls) for cls in self.classnames
+        ]
+        self.tkn_prompts = tokenize(self.txt_prompts)
 
         # set the inital context, this will be reused at every new inference
         # this is the context that will be optimized
@@ -103,7 +109,8 @@ class EasyPromptLearner(nn.Module):
             )
             prompts.append(prompt)
         prompts = torch.cat(prompts, dim=0)
-
+        # stgr = self.tkn_embedder(tokenize(self.txt_prompts).cuda())
+        # breakpoint()
         return prompts
 
     def forward(self):
@@ -145,6 +152,7 @@ class EasyTPT(nn.Module):
         self.prompt_learner = EasyPromptLearner(device, clip, base_prompt)
 
     def forward(self, x):
+
         with torch.no_grad():
             image_feat = self.image_encoder(x)
 
