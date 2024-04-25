@@ -42,9 +42,10 @@ def test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_stren
         net2 = copy.deepcopy(net)
         data = imageNet_A[i]
         image = data["img"]
-        label = data["label"]
+        label = int(data["label"])
         adapt_single(net2, image, optimizer, marginal_entropy, niter, batch_size, prior_strength, DEVICE)
         correct.append(test_single(net2, image, label, prior_strength,DEVICE)[0])
+        if(i%100==0):print(f'\nMEMO adapt test error A {(1 - np.mean(correct)) * 100:.2f}')
     
     print(f'MEMO adapt test error A {(1 - np.mean(correct)) * 100:.2f}')
 
@@ -53,7 +54,7 @@ def test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_stren
         net2 = copy.deepcopy(net)
         data = imageNet_V2[i]
         image = data["img"]
-        label = data["label"]
+        label = int(data["label"])
         adapt_single(net2, image, optimizer, marginal_entropy, niter, batch_size, prior_strength, DEVICE)
         correct.append(test_single(net2, image, label, prior_strength, DEVICE)[0])
     
