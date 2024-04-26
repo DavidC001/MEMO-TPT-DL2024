@@ -9,5 +9,5 @@ if __name__ == "__main__":
     weight_decay = 0 if model_name == 'resnet' else 0.01
     opt = 'SGD' if model_name == 'resnet' else 'adamw'
     niter = 1
-    prior_strength = -1
+    prior_strength = 0.94
     test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_strength)
