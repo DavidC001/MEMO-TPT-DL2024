@@ -68,7 +68,7 @@ def test_time_tuning(model, inputs, optimizer, ttt_steps=4):
     return
 
 
-def tpt_eval(model, imgs, optimizer, ttt_steps, optim_state):
+def tpt_inference(model, imgs, optimizer, ttt_steps, optim_state):
 
     og_img = imgs[0].unsqueeze(0)
     prep_imgs = torch.stack(imgs).cuda()
@@ -172,7 +172,7 @@ TTT_STEPS = 1
 AUGMIX = False
 NAUG = 63
 
-EVAL_CLIP = False
+EVAL_CLIP = True
 
 for _ in range(len(idxs)):
 
@@ -190,7 +190,7 @@ for _ in range(len(idxs)):
     else:
         augs = [img_prep] + [base_trans(img_prep) for _ in range(NAUG)]
 
-    out_id = tpt_eval(tpt, augs, optimizer, TTT_STEPS, optim_state)
+    out_id = tpt_inference(tpt, augs, optimizer, TTT_STEPS, optim_state)
 
     og_label, og_classname = a_classes[out_id]
 
