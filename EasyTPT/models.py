@@ -8,13 +8,14 @@ from clip import load, tokenize
 
 
 class EasyPromptLearner(nn.Module):
-    def __init__(self, device, clip, base_prompt="a photo of [CLS]"):
+    def __init__(self, device, clip, base_prompt="a photo of [CLS]", splt_ctx=False):
         super().__init__()
 
         self.device = device
         self.base_prompt = base_prompt
         self.clip = clip
         self.tkn_embedder = clip.token_embedding
+        self.split_ctx = splt_ctx
 
     def prepare_prompts(self, classnames):
         print("[PromptLearner] Preparing prompts")
@@ -88,14 +89,15 @@ class EasyPromptLearner(nn.Module):
         # set the inital context, this will be reused at every new inference
         # this is the context that will be optimized
 
-        self.ctx = torch.cat((self.emb_prefix, self.emb_suffix), dim=1)
-        self.ctx = nn.Parameter(self.ctx)
-        # self.emb_prefix = nn.Parameter(self.emb_prefix)
-        # self.emb_suffix = nn.Parameter(self.emb_suffix)
-
-        # self.pre_init_state = self.emb_prefix.detach().clone()
-        # self.suf_init_state = self.emb_suffix.detach().clone()
-        self.ctx_init_state = self.ctx.detach().clone()
+        if self.split_ctx:
+            self.emb_prefix = nn.Parameter(self.emb_prefix)
+            self.emb_suffix = nn.Parameter(self.emb_suffix)
+            self.pre_init_state = self.emb_prefix.detach().clone()
+            self.suf_init_state = self.emb_suffix.detach().clone()
+        else:
+            self.ctx = torch.cat((self.emb_prefix, self.emb_suffix), dim=1)
+            self.ctx = nn.Parameter(self.ctx)
+            self.ctx_init_state = self.ctx.detach().clone()
 
     def build_ctx(self):
         prompts = []
@@ -105,12 +107,20 @@ class EasyPromptLearner(nn.Module):
                 + self.indc[i].item()
                 + self.emb_suffix.shape[1]
             )
+
+            if self.split_ctx:
+                prefix = self.emb_prefix
+                suffix = self.emb_suffix
+            else:
+                prefix = self.ctx[:, : self.emb_prefix.shape[1]]
+                suffix = self.ctx[:, self.emb_prefix.shape[1] :]
+
             prompt = torch.cat(
                 (
                     self.emb_sot,
-                    self.ctx[:, : self.emb_prefix.shape[1]],
+                    prefix,
                     self.all_cls[i].unsqueeze(0),
-                    self.ctx[:, self.emb_prefix.shape[1] :],
+                    suffix,
                     self.emb_eot,
                     self.emb_pad[:, :pad_size],
                 ),
@@ -118,8 +128,7 @@ class EasyPromptLearner(nn.Module):
             )
             prompts.append(prompt)
         prompts = torch.cat(prompts, dim=0)
-        # stgr = self.tkn_embedder(tokenize(self.txt_prompts).cuda())
-        # breakpoint()
+
         return prompts
 
     def forward(self):
@@ -127,22 +136,22 @@ class EasyPromptLearner(nn.Module):
         return self.build_ctx()
 
     def reset(self):
-        # ctx_vectors = self.init_ctx
-        # self.ctx = ctx_vectors.detach().clone()
-        # pre_ctx = self.pre_init_state
-        # suf_ctx = self.suf_init_state
-        # copy
-        # self.emb_prefix.data = pre_ctx
-        # self.emb_suffix.data = suf_ctx
 
-        # self.emb_prefix.copy_(pre_ctx)  # to be optimized
-        # self.emb_suffix.copy_(suf_ctx)  # to be optimized
-
-        self.ctx.copy_(self.ctx_init_state)  # to be optimized
+        if self.split_ctx:
+            self.emb_prefix.copy_(self.pre_init_state)  # to be optimized
+            self.emb_suffix.copy_(self.suf_init_state)  # to be optimized
+        else:
+            self.ctx.copy_(self.ctx_init_state)  # to be optimized
 
 
 class EasyTPT(nn.Module):
-    def __init__(self, device, base_prompt="a photo of a [CLS]", arch="RN50"):
+    def __init__(
+        self,
+        device,
+        base_prompt="a photo of a [CLS]",
+        arch="RN50",
+        splt_ctx=False,
+    ):
         super(EasyTPT, self).__init__()
         self.device = device
 
@@ -160,7 +169,7 @@ class EasyTPT(nn.Module):
         self.image_encoder = clip.encode_image
         self.text_encoder = clip.encode_text
 
-        self.prompt_learner = EasyPromptLearner(device, clip, base_prompt)
+        self.prompt_learner = EasyPromptLearner(device, clip, base_prompt, splt_ctx)
 
     def forward(self, x):
 

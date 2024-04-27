@@ -27,6 +27,7 @@ torch.autograd.set_detect_anomaly(True)
 
 
 def select_confident_samples(logits, top):
+
     batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
     idx = torch.argsort(batch_entropy, descending=False)[
         : int(batch_entropy.size()[0] * top)
@@ -105,8 +106,9 @@ device = "cuda:0"
 
 ARCH = "RN50"
 BASE_PROMPT = "a photo of a [CLS]"
+SPLT_CTX = True
 
-tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH)
+tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
 
 
 for name, param in tpt.named_parameters():
