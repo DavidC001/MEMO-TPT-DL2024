@@ -13,20 +13,20 @@ import numpy as np
 from copy import deepcopy
 from tqdm import tqdm
 from random import choice
+from PIL import Image
+from pprint import pprint
+from clip import tokenize
 
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from PIL import Image
+
 
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
 from dataloaders.dataloader import get_classes_names
-from models import EasyTPT
-from pprint import pprint
-from clip import tokenize
 
-from utils import DatasetWrapper, AugMixAugmenter
-
+from EasyTPT.utils import DatasetWrapper, EasyAgumenter
+from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
 
 torch.autograd.set_detect_anomaly(True)
@@ -147,11 +147,10 @@ normalize = transforms.Normalize(
 
 preprocess = transforms.Compose([transforms.ToTensor(), normalize])
 
-data_transform = AugMixAugmenter(
+data_transform = EasyAgumenter(
     base_trans,
     preprocess,
     n_views=63,
-    augmix=True,
 )
 ima_root = "datasets/imagenet-a"
 # loads the DataLoader TODO: put our own dataloader here
