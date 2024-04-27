@@ -16,6 +16,8 @@ from typing import Any, Tuple
 class DatasetWrapper(datasets.ImageFolder):
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """
+        This function is overriden to return the path of the image as well
+
         Args:
             index (int): Index
 

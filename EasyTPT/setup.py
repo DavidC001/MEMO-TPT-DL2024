@@ -36,10 +36,10 @@ def get_args():
 
     parser.add_argument(
         "-S",
-        "--split-context",
-        action="store_false",
+        "--single-context",
+        action="store_true",
         help="Split context or not",
-        default=True,
+        default=False,
     )
 
     parser.add_argument(
