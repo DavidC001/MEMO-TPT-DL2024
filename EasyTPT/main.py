@@ -176,7 +176,7 @@ NAUG = 63
 
 EVAL_CLIP = True
 
-for _ in tqdm(range(len(idxs))):
+for _ in range(len(idxs)):
 
     idx = choice(idxs)
     idxs.remove(idx)
