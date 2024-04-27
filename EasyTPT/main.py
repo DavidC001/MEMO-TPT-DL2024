@@ -22,11 +22,12 @@ from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
 from dataloaders.dataloader import get_classes_names
 from models import EasyTPT
-
+from pprint import pprint
 from clip import tokenize
 
 from utils import DatasetWrapper, AugMixAugmenter
 
+from EasyTPT.setup import get_args
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -108,11 +109,15 @@ def clip_eval(model, img_prep):
     return clip_id
 
 
+args = get_args()
+pprint(args)
+
 device = "cuda:0"
 
-ARCH = "RN50"
-BASE_PROMPT = "a photo of a [CLS]"
-SPLT_CTX = True
+ARCH = args["arch"]
+BASE_PROMPT = args["base_prompt"]
+SPLT_CTX = args["split_context"]
+
 
 tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
 
@@ -146,7 +151,7 @@ data_transform = AugMixAugmenter(
     base_trans,
     preprocess,
     n_views=63,
-    augmix=False,
+    augmix=True,
 )
 ima_root = "datasets/imagenet-a"
 # loads the DataLoader TODO: put our own dataloader here
@@ -188,11 +193,11 @@ cnt = 0
 
 # idxs = list(range(len(dataset)))
 
-TTT_STEPS = 1
-AUGMIX = False
+TTT_STEPS = args["tts"]
+AUGMIX = args["augmix"]
 NAUG = 63
 
-EVAL_CLIP = True
+EVAL_CLIP = args["clip"]
 for i, (imgs, target) in enumerate(val_loader):
 
     label = target[0]

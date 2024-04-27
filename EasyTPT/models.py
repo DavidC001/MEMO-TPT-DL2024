@@ -138,10 +138,10 @@ class EasyPromptLearner(nn.Module):
     def reset(self):
 
         if self.split_ctx:
-            self.emb_prefix.copy_(self.pre_init_state)  # to be optimized
-            self.emb_suffix.copy_(self.suf_init_state)  # to be optimized
+            self.emb_prefix.data.copy_(self.pre_init_state.data)  # to be optimized
+            self.emb_suffix.data.copy_(self.suf_init_state.data)  # to be optimized
         else:
-            self.ctx.copy_(self.ctx_init_state)  # to be optimized
+            self.ctx.data.copy_(self.ctx_init_state.data)  # to be optimized
 
 
 class EasyTPT(nn.Module):
