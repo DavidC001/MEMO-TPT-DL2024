@@ -163,3 +163,5 @@ cython_debug/
 *.gz
 
 datasets/
+
+!datasets/.placeholder

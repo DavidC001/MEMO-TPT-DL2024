@@ -1,4 +1,7 @@
+# !! THIS GUIDE REFERS TO THE PAPER'S ORIGINAL IMPLEMENTATION AND NOT TO OURS !!
+
 # Testtime Prompt Tuning
+
 
 
 In the [paper](https://arxiv.org/pdf/2209.07511.pdf) implementation there's *a lot* of stuff happening, this is a very very trimmed down version with a fully functioning TPT implementation and much less boilerplate code. CoOp and CoCoOp are not implemented as they are not *needed* for the task and add another level of complexity and unreadeability to this already convoluted code. This poses a good base for both an eventual reimplementation of the full paper or a simpler version of TPT to be plugged in a more complex pipeline.
