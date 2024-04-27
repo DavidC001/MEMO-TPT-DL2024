@@ -1,9 +1,13 @@
+import os
+
 from PIL import Image
 import numpy as np
 
 import torch
 import torchvision.transforms as transforms
 
+import datasets
+import torchvision.datasets as datasets
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -15,7 +19,7 @@ except ImportError:
 import augmix_ops as augmentations
 
 
-from typing import Any
+from typing import Any, Tuple
 
 
 # AugMix Transforms
@@ -28,8 +32,7 @@ def get_preaugment():
     )
 
 
-def augmix(image, preprocess, severity=1):
-    aug_list = augmentations.augmentations
+def augmix(image, preprocess, aug_list, severity=1):
     preaugment = get_preaugment()
     x_orig = preaugment(image)
     x_processed = preprocess(x_orig)
@@ -46,3 +49,43 @@ def augmix(image, preprocess, severity=1):
         mix += w[i] * preprocess(x_aug)
     mix = m * x_processed + (1 - m) * mix
     return mix
+
+
+class DatasetWrapper(datasets.ImageFolder):
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (sample, (target,path)) where target is class_index of the target class nad path the path to the image
+        """
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return sample, (target, path)
+
+
+class AugMixAugmenter(object):
+    def __init__(self, base_transform, preprocess, n_views=2, augmix=False, severity=1):
+        self.base_transform = base_transform
+        self.preprocess = preprocess
+        self.n_views = n_views
+        if augmix:
+            self.aug_list = augmentations.augmentations
+        else:
+            self.aug_list = []
+        self.severity = severity
+
+    def __call__(self, x):
+
+        image = self.preprocess(self.base_transform(x))
+        views = [
+            augmix(x, self.preprocess, self.aug_list, self.severity)
+            for _ in range(self.n_views)
+        ]
+        return [image] + views

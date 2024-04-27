@@ -25,6 +25,9 @@ from models import EasyTPT
 
 from clip import tokenize
 
+from utils import DatasetWrapper, AugMixAugmenter
+
+
 torch.autograd.set_detect_anomaly(True)
 
 
@@ -72,8 +75,9 @@ def test_time_tuning(model, inputs, optimizer, ttt_steps=4):
 
 def tpt_inference(model, imgs, optimizer, ttt_steps, optim_state):
 
-    og_img = imgs[0].unsqueeze(0)
-    prep_imgs = torch.stack(imgs).cuda()
+    image = imgs[0].cuda()
+
+    images = torch.cat(imgs, dim=0).cuda()
 
     model.eval()
 
@@ -82,9 +86,9 @@ def tpt_inference(model, imgs, optimizer, ttt_steps, optim_state):
 
     optimizer.load_state_dict(optim_state)
 
-    test_time_tuning(model, prep_imgs, optimizer, ttt_steps=ttt_steps)
+    test_time_tuning(model, images, optimizer, ttt_steps=ttt_steps)
     with torch.no_grad():
-        out = model(og_img.cuda())
+        out = model(image.cuda())
     out_id = out.argmax(1).item()
     return out_id
 
@@ -93,7 +97,7 @@ def clip_eval(model, img_prep):
     tkn_prompts = tokenize(model.prompt_learner.txt_prompts)
 
     with torch.no_grad():
-        image_feat = model.clip.encode_image(img_prep.unsqueeze(0).cuda())
+        image_feat = model.clip.encode_image(img_prep[0].cuda())
         image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
         txt_feat = model.clip.encode_text(tkn_prompts.cuda())
         txt_feat = txt_feat / txt_feat.norm(dim=-1, keepdim=True)
@@ -123,16 +127,39 @@ else:
     print("Switching to GPU, brace yourself!")
     torch.cuda.set_device(device)
     tpt = tpt.cuda(device)
+base_trans = transforms.Compose(
+    [
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+    ]
+)
 
-transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize((224, 224))])
+normalize = transforms.Normalize(
+    mean=[0.48145466, 0.4578275, 0.40821073],
+    std=[0.26862954, 0.26130258, 0.27577711],
+)
+
+
+preprocess = transforms.Compose([transforms.ToTensor(), normalize])
+
+data_transform = AugMixAugmenter(
+    base_trans,
+    preprocess,
+    n_views=63,
+    augmix=False,
+)
 ima_root = "datasets/imagenet-a"
-dataset = ImageNetA(ima_root, transform=transform)
+# loads the DataLoader TODO: put our own dataloader here
+val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
-# imv_root = "datasets/imagenetv2-matched-frequency-format-val"
-# dataset = ImageNetV2(imv_root, transform=transform)
+print("number of test samples: {}".format(len(val_dataset)))
+val_loader = torch.utils.data.DataLoader(
+    val_dataset,
+    batch_size=1,
+    shuffle=True,
+    pin_memory=True,
+)
 
-my_classes = dataset.getClassesNames()
-all_classnames = get_classes_names()
 
 # some fuckery to use the original TPT prompts
 from tpt_classnames.imagnet_prompts import imagenet_classes
@@ -141,21 +168,12 @@ from tpt_classnames.imagenet_variants import imagenet_a_mask
 label_mask = eval("imagenet_a_mask")
 classnames = [imagenet_classes[i] for i in label_mask]
 
-a_classes = [(i, name) for i, name in enumerate(all_classnames) if name in my_classes]
-a_classnames = [name for name in all_classnames if name in my_classes]
-a_classnames = classnames
-
-from utils import augmix
-
-base_trans = transforms.Compose(
-    [
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-    ]
-)
+a_to_i_classes = [
+    (i, name) for i, name in enumerate(imagenet_classes) if name in classnames
+]
 
 
-tpt.prompt_learner.prepare_prompts(a_classnames)
+tpt.prompt_learner.prepare_prompts(classnames)
 
 
 LR = 0.005
@@ -168,35 +186,24 @@ clip_correct = 0
 cnt = 0
 
 
-idxs = list(range(len(dataset)))
+# idxs = list(range(len(dataset)))
 
 TTT_STEPS = 1
 AUGMIX = False
 NAUG = 63
 
 EVAL_CLIP = True
+for i, (imgs, target) in enumerate(val_loader):
 
-for _ in range(len(idxs)):
+    label = target[0]
+    path = target[1]
+    name = classnames[int(label)]
 
-    idx = choice(idxs)
-    idxs.remove(idx)
-    data = dataset[idx]
-    img = data["img"]
-    label = data["label"]
-    name = data["name"]
+    out_id = tpt_inference(tpt, imgs, optimizer, TTT_STEPS, optim_state)
 
-    img_prep = tpt.preprocess(img)
+    tpt_predicted = classnames[out_id]
 
-    if AUGMIX:
-        augs = [img_prep] + [augmix(img, tpt.preprocess) for _ in range(NAUG)]
-    else:
-        augs = [img_prep] + [base_trans(img_prep) for _ in range(NAUG)]
-
-    out_id = tpt_inference(tpt, augs, optimizer, TTT_STEPS, optim_state)
-
-    og_label, og_classname = a_classes[out_id]
-
-    if og_label == int(label):
+    if out_id == int(label):
         tpt_correct += 1
     cnt += 1
 
@@ -204,11 +211,9 @@ for _ in range(len(idxs)):
 
     ################ CLIP ############################
     if EVAL_CLIP:
-        clip_id = clip_eval(tpt, img_prep)
-
-        clip_label, clip_classname = a_classes[clip_id]
-
-        if clip_label == int(label):
+        clip_id = clip_eval(tpt, imgs)
+        clip_predicted = classnames[clip_id]
+        if clip_id == int(label):
             clip_correct += 1
 
         clip_acc = clip_correct / (cnt)
@@ -217,8 +222,8 @@ for _ in range(len(idxs)):
     print(f"TPT Accuracy: {round(tpt_acc,3)}")
     if EVAL_CLIP:
         print(f"CLIP Accuracy: {round(clip_acc,3)}")
-    print(f"GT: \t{name}\nTPT: \t{og_classname}")
+    print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
     if EVAL_CLIP:
-        print(f"CLIP: \t{clip_classname}")
+        print(f"CLIP: \t{clip_predicted}")
     print(f"after {cnt} samples\n")
 breakpoint()
