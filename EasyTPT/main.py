@@ -28,6 +28,8 @@ from dataloaders.dataloader import get_classes_names
 from EasyTPT.utils import DatasetWrapper, EasyAgumenter
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
+from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
+from EasyTPT.tpt_classnames.imagenet_variants import imagenet_a_mask
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -116,22 +118,25 @@ device = "cuda:0"
 
 ARCH = args["arch"]
 BASE_PROMPT = args["base_prompt"]
-SPLT_CTX = args["split_context"]
+SPLT_CTX = not args["single_context"]
 
 
 tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
 
-
+# freeze the model
 for name, param in tpt.named_parameters():
     param.requires_grad_(False)
 
 
+# switch to GPU if available
 if not torch.cuda.is_available():
     print("Using CPU this is no bueno")
 else:
     print("Switching to GPU, brace yourself!")
     torch.cuda.set_device(device)
     tpt = tpt.cuda(device)
+
+######## DATALOADER #############################################
 base_trans = transforms.Compose(
     [
         transforms.RandomResizedCrop(224),
@@ -139,13 +144,16 @@ base_trans = transforms.Compose(
     ]
 )
 
-normalize = transforms.Normalize(
-    mean=[0.48145466, 0.4578275, 0.40821073],
-    std=[0.26862954, 0.26130258, 0.27577711],
+
+preprocess = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.48145466, 0.4578275, 0.40821073],
+            std=[0.26862954, 0.26130258, 0.27577711],
+        ),
+    ]
 )
-
-
-preprocess = transforms.Compose([transforms.ToTensor(), normalize])
 
 data_transform = EasyAgumenter(
     base_trans,
@@ -153,7 +161,7 @@ data_transform = EasyAgumenter(
     n_views=63,
 )
 ima_root = "datasets/imagenet-a"
-# loads the DataLoader TODO: put our own dataloader here
+
 val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
 print("number of test samples: {}".format(len(val_dataset)))
@@ -164,19 +172,16 @@ val_loader = torch.utils.data.DataLoader(
     pin_memory=True,
 )
 
+##############################################################################
 
 # some fuckery to use the original TPT prompts
-from tpt_classnames.imagnet_prompts import imagenet_classes
-from tpt_classnames.imagenet_variants import imagenet_a_mask
+
 
 label_mask = eval("imagenet_a_mask")
 classnames = [imagenet_classes[i] for i in label_mask]
 
-a_to_i_classes = [
-    (i, name) for i, name in enumerate(imagenet_classes) if name in classnames
-]
 
-
+# Initialize EasyPromptLearner
 tpt.prompt_learner.prepare_prompts(classnames)
 
 
@@ -190,13 +195,13 @@ clip_correct = 0
 cnt = 0
 
 
-# idxs = list(range(len(dataset)))
-
 TTT_STEPS = args["tts"]
 AUGMIX = args["augmix"]
 NAUG = 63
 
 EVAL_CLIP = args["clip"]
+
+
 for i, (imgs, target) in enumerate(val_loader):
 
     label = target[0]
