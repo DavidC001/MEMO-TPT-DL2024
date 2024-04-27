@@ -96,7 +96,7 @@ def test_time_tuning(model, inputs, optimizer, scaler, args):
                     output, args["selection_p"]
                 )
             loss = avg_entropy(output)
-        breakpoint()
+
         optimizer.zero_grad()
         # compute gradient and do SGD step
         scaler.scale(loss).backward()
@@ -155,7 +155,8 @@ def test_time_adapt_eval(
             images[k] = images[k].cuda(args["gpu"], non_blocking=True)
         image = images[0]
 
-        target = target.cuda(args["gpu"], non_blocking=True)
+        label = target[0]
+        label = label.cuda(args["gpu"], non_blocking=True)
 
         images = torch.cat(images, dim=0)
 
@@ -172,7 +173,7 @@ def test_time_adapt_eval(
                 output = model(image)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        acc1, acc5 = accuracy(output, label, topk=(1, 5))
         top1.update(acc1[0], image.size(0))
         top5.update(acc5[0], image.size(0))
 
@@ -308,9 +309,9 @@ if __name__ == "__main__":
         pin_memory=True,
     )
 
-    # results[set_id] = test_time_adapt_eval(
-    #     val_loader, model, model_state, optimizer, optim_state, scaler, args
-    # )
+    results[set_id] = test_time_adapt_eval(
+        val_loader, model, model_state, optimizer, optim_state, scaler, args
+    )
 
     results = []
 
