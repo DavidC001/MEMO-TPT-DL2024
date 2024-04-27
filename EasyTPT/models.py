@@ -79,13 +79,23 @@ class EasyPromptLearner(nn.Module):
         ]
         self.tkn_prompts = tokenize(self.txt_prompts)
 
+        ####### test######################à
+
+        # self.enc_prompts = self.clip.encode_text(self.tkn_prompts.cuda())
+
+        #################################
+
         # set the inital context, this will be reused at every new inference
         # this is the context that will be optimized
-        self.emb_prefix = nn.Parameter(self.emb_prefix)
-        self.emb_suffix = nn.Parameter(self.emb_suffix)
 
-        self.pre_init_state = self.emb_prefix.detach().clone()
-        self.suf_init_state = self.emb_suffix.detach().clone()
+        self.ctx = torch.cat((self.emb_prefix, self.emb_suffix), dim=1)
+        self.ctx = nn.Parameter(self.ctx)
+        # self.emb_prefix = nn.Parameter(self.emb_prefix)
+        # self.emb_suffix = nn.Parameter(self.emb_suffix)
+
+        # self.pre_init_state = self.emb_prefix.detach().clone()
+        # self.suf_init_state = self.emb_suffix.detach().clone()
+        self.ctx_init_state = self.ctx.detach().clone()
 
     def build_ctx(self):
         prompts = []
@@ -95,13 +105,12 @@ class EasyPromptLearner(nn.Module):
                 + self.indc[i].item()
                 + self.emb_suffix.shape[1]
             )
-
             prompt = torch.cat(
                 (
                     self.emb_sot,
-                    self.emb_prefix,
+                    self.ctx[:, : self.emb_prefix.shape[1]],
                     self.all_cls[i].unsqueeze(0),
-                    self.emb_suffix,
+                    self.ctx[:, self.emb_prefix.shape[1] :],
                     self.emb_eot,
                     self.emb_pad[:, :pad_size],
                 ),
@@ -120,14 +129,16 @@ class EasyPromptLearner(nn.Module):
     def reset(self):
         # ctx_vectors = self.init_ctx
         # self.ctx = ctx_vectors.detach().clone()
-        pre_ctx = self.pre_init_state
-        suf_ctx = self.suf_init_state
+        # pre_ctx = self.pre_init_state
+        # suf_ctx = self.suf_init_state
         # copy
         # self.emb_prefix.data = pre_ctx
         # self.emb_suffix.data = suf_ctx
 
-        self.emb_prefix.copy_(pre_ctx)  # to be optimized
-        self.emb_suffix.copy_(suf_ctx)  # to be optimized
+        # self.emb_prefix.copy_(pre_ctx)  # to be optimized
+        # self.emb_suffix.copy_(suf_ctx)  # to be optimized
+
+        self.ctx.copy_(self.ctx_init_state)  # to be optimized
 
 
 class EasyTPT(nn.Module):
@@ -155,15 +166,15 @@ class EasyTPT(nn.Module):
 
         with torch.no_grad():
             image_feat = self.image_encoder(x)
+            image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
 
         emb_prompts = self.prompt_learner()
 
-        text_features = self.custom_encoder(
-            emb_prompts, self.prompt_learner.tkn_prompts
-        )
-        image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
+        txt_features = self.custom_encoder(emb_prompts, self.prompt_learner.tkn_prompts)
+        txt_features = txt_features / txt_features.norm(dim=-1, keepdim=True)
+
         logit_scale = self.clip.logit_scale.exp()
-        logits = logit_scale * image_feat @ text_features.t()
+        logits = logit_scale * image_feat @ txt_features.t()
 
         # breakpoint()
         return logits
