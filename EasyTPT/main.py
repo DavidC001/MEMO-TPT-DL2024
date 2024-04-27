@@ -92,7 +92,7 @@ def tpt_inference(model, imgs, optimizer, ttt_steps, optim_state):
     test_time_tuning(model, images, optimizer, ttt_steps=ttt_steps)
     with torch.no_grad():
         out = model(image.cuda())
-    out_id = out.argmax(1).item()
+        out_id = out.argmax(1).item()
     return out_id
 
 
@@ -111,128 +111,121 @@ def clip_eval(model, img_prep):
     return clip_id
 
 
-args = get_args()
-pprint(args)
+if __name__ == "__main__":
+    args = get_args()
+    pprint(args)
 
-device = "cuda:0"
+    device = "cuda:0"
 
-ARCH = args["arch"]
-BASE_PROMPT = args["base_prompt"]
-SPLT_CTX = not args["single_context"]
+    ARCH = args["arch"]
+    BASE_PROMPT = args["base_prompt"]
+    SPLT_CTX = not args["single_context"]
 
+    tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
 
-tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
+    # freeze the model
+    for name, param in tpt.named_parameters():
+        param.requires_grad_(False)
 
-# freeze the model
-for name, param in tpt.named_parameters():
-    param.requires_grad_(False)
+    # switch to GPU if available
+    if not torch.cuda.is_available():
+        print("Using CPU this is no bueno")
+    else:
+        print("Switching to GPU, brace yourself!")
+        torch.cuda.set_device(device)
+        tpt = tpt.cuda(device)
 
+    ######## DATALOADER #############################################
+    base_trans = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+        ]
+    )
 
-# switch to GPU if available
-if not torch.cuda.is_available():
-    print("Using CPU this is no bueno")
-else:
-    print("Switching to GPU, brace yourself!")
-    torch.cuda.set_device(device)
-    tpt = tpt.cuda(device)
+    preprocess = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.48145466, 0.4578275, 0.40821073],
+                std=[0.26862954, 0.26130258, 0.27577711],
+            ),
+        ]
+    )
 
-######## DATALOADER #############################################
-base_trans = transforms.Compose(
-    [
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-    ]
-)
+    data_transform = EasyAgumenter(
+        base_trans,
+        preprocess,
+        n_views=63,
+    )
+    ima_root = "datasets/imagenet-a"
 
+    val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
-preprocess = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.48145466, 0.4578275, 0.40821073],
-            std=[0.26862954, 0.26130258, 0.27577711],
-        ),
-    ]
-)
+    print("number of test samples: {}".format(len(val_dataset)))
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset,
+        batch_size=1,
+        shuffle=True,
+        pin_memory=True,
+    )
 
-data_transform = EasyAgumenter(
-    base_trans,
-    preprocess,
-    n_views=63,
-)
-ima_root = "datasets/imagenet-a"
+    ##############################################################################
 
-val_dataset = DatasetWrapper(ima_root, transform=data_transform)
+    # some fuckery to use the original TPT prompts
 
-print("number of test samples: {}".format(len(val_dataset)))
-val_loader = torch.utils.data.DataLoader(
-    val_dataset,
-    batch_size=1,
-    shuffle=True,
-    pin_memory=True,
-)
+    label_mask = eval("imagenet_a_mask")
+    classnames = [imagenet_classes[i] for i in label_mask]
 
-##############################################################################
+    # Initialize EasyPromptLearner
+    tpt.prompt_learner.prepare_prompts(classnames)
 
-# some fuckery to use the original TPT prompts
+    LR = 0.005
+    trainable_param = tpt.prompt_learner.parameters()
+    optimizer = torch.optim.AdamW(trainable_param, LR)
+    optim_state = deepcopy(optimizer.state_dict())
 
+    tpt_correct = 0
+    clip_correct = 0
+    cnt = 0
 
-label_mask = eval("imagenet_a_mask")
-classnames = [imagenet_classes[i] for i in label_mask]
+    TTT_STEPS = args["tts"]
+    AUGMIX = args["augmix"]
+    NAUG = 63
 
+    EVAL_CLIP = args["clip"]
 
-# Initialize EasyPromptLearner
-tpt.prompt_learner.prepare_prompts(classnames)
+    for i, (imgs, target) in enumerate(val_loader):
 
+        label = target[0]
+        path = target[1]
+        name = classnames[int(label)]
 
-LR = 0.005
-trainable_param = tpt.prompt_learner.parameters()
-optimizer = torch.optim.AdamW(trainable_param, LR)
-optim_state = deepcopy(optimizer.state_dict())
+        out_id = tpt_inference(tpt, imgs, optimizer, TTT_STEPS, optim_state)
+        with torch.no_grad():
+            tpt_predicted = classnames[out_id]
 
-tpt_correct = 0
-clip_correct = 0
-cnt = 0
+            if out_id == int(label):
+                tpt_correct += 1
+            cnt += 1
 
+            tpt_acc = tpt_correct / (cnt)
 
-TTT_STEPS = args["tts"]
-AUGMIX = args["augmix"]
-NAUG = 63
+        ################ CLIP ############################
+        if EVAL_CLIP:
+            clip_id = clip_eval(tpt, imgs)
+            clip_predicted = classnames[clip_id]
+            if clip_id == int(label):
+                clip_correct += 1
 
-EVAL_CLIP = args["clip"]
+            clip_acc = clip_correct / (cnt)
+        ###################################################
 
-
-for i, (imgs, target) in enumerate(val_loader):
-
-    label = target[0]
-    path = target[1]
-    name = classnames[int(label)]
-
-    out_id = tpt_inference(tpt, imgs, optimizer, TTT_STEPS, optim_state)
-
-    tpt_predicted = classnames[out_id]
-
-    if out_id == int(label):
-        tpt_correct += 1
-    cnt += 1
-
-    tpt_acc = tpt_correct / (cnt)
-
-    ################ CLIP ############################
-    if EVAL_CLIP:
-        clip_id = clip_eval(tpt, imgs)
-        clip_predicted = classnames[clip_id]
-        if clip_id == int(label):
-            clip_correct += 1
-
-        clip_acc = clip_correct / (cnt)
-    ###################################################
-
-    print(f"TPT Accuracy: {round(tpt_acc,3)}")
-    if EVAL_CLIP:
-        print(f"CLIP Accuracy: {round(clip_acc,3)}")
-    print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
-    if EVAL_CLIP:
-        print(f"CLIP: \t{clip_predicted}")
-    print(f"after {cnt} samples\n")
-breakpoint()
+        print(f"TPT Accuracy: {round(tpt_acc,3)}")
+        if EVAL_CLIP:
+            print(f"CLIP Accuracy: {round(clip_acc,3)}")
+        print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
+        if EVAL_CLIP:
+            print(f"CLIP: \t{clip_predicted}")
+        print(f"after {cnt} samples\n")
+    breakpoint()
