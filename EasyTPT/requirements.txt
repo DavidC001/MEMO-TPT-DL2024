@@ -1,0 +1,16 @@
+clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33
+datasets==2.18.0
+gdown==5.1.0
+huggingface-hub==0.22.2
+matplotlib==3.8.3
+matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1660814786464/work
+numpy==1.26.4
+opencv-contrib-python==4.9.0.80
+opencv-python==4.9.0.80
+pandas==2.2.1
+pillow==10.2.0
+PyYAML==6.0.1
+scikit-image==0.23.1
+scikit-learn==1.4.1.post1
+tqdm==4.66.2
+wandb==0.16.4

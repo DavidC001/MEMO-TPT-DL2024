@@ -6,10 +6,12 @@ import os
 import random
 import math
 import torch
+
 import matplotlib.pyplot as plt
 import numpy as np
-from copy import deepcopy
 
+from copy import deepcopy
+from tqdm import tqdm
 from random import choice
 
 from torchvision import transforms
@@ -174,7 +176,7 @@ NAUG = 63
 
 EVAL_CLIP = True
 
-for _ in range(len(idxs)):
+for _ in tqdm(range(len(idxs))):
 
     idx = choice(idxs)
     idxs.remove(idx)
