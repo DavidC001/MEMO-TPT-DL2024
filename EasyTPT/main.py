@@ -20,7 +20,7 @@ from clip import tokenize
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
-
+from dataloaders.dataloader import get_dataloaders
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
 from dataloaders.dataloader import get_classes_names
@@ -111,7 +111,7 @@ def clip_eval(model, img_prep):
     return clip_id
 
 
-if __name__ == "__main__":
+def main():
     args = get_args()
     pprint(args)
 
@@ -138,8 +138,7 @@ if __name__ == "__main__":
     ######## DATALOADER #############################################
     base_trans = transforms.Compose(
         [
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
+            transforms.Resize((224, 224)),
         ]
     )
 
@@ -160,6 +159,9 @@ if __name__ == "__main__":
     )
     ima_root = "datasets/imagenet-a"
 
+    # datasetRoot = "datasets"
+    # imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=data_transform())
+    # breakpoint()
     val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
     print("number of test samples: {}".format(len(val_dataset)))
@@ -229,3 +231,7 @@ if __name__ == "__main__":
             print(f"CLIP: \t{clip_predicted}")
         print(f"after {cnt} samples\n")
     breakpoint()
+
+
+if __name__ == "__main__":
+    main()
