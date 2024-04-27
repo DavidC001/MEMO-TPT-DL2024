@@ -22,8 +22,7 @@ def build_model(model_name, device, prior_strength=1):
         net = models.resnext101_32x8d(weights=weights).to(device=device)
     else:
         weights = models.ResNet50_Weights.DEFAULT
-        net = models.resnet50(weights=weights)
-    net = torch.nn.DataParallel(net).to(device=device)
+        net = models.resnet50(weights=weights).to(device=device)
 
     print('modifying BN forward pass')
     nn.BatchNorm2d.prior = prior_strength
