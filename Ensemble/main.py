@@ -129,8 +129,8 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
         name = data_TPT["name"]
 
         for _ in range(niter):
-            TPT_outs = TPT_inference(tpt_model, img_TPT, "cuda:0")
-            MEMO_outs = memo_inference(memo_model, img_MEMO, "cuda:1")
+            TPT_outs = TPT_inference(tpt_model, img_TPT, "cuda")
+            MEMO_outs = memo_inference(memo_model, img_MEMO, "cuda")
 
             loss_val = loss(TPT_outs, MEMO_outs)
             loss_val.backward()
@@ -138,31 +138,29 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
             optimizerTPT.step()
             optimizerMEMO.step()
 
-        img_prep = tpt_model.preprocess(img_TPT).unsqueeze(0).to("cuda:0")
-        TPT_out = tpt_model(img_prep)
-        MEMO_out = memo_model(img_MEMO.unsqueeze(0).to("cuda:1"))
+        with torch.no_grad():
+            img_prep = tpt_model.preprocess(img_TPT).unsqueeze(0).to("cuda")
+            TPT_out = tpt_model(img_prep)
+            MEMO_out = memo_model(img_MEMO.unsqueeze(0).to("cuda"))
 
-        #bring the outputs to the same device
-        TPT_out = TPT_out.to(MEMO_out.device)
-        out = TPT_out + MEMO_out
-        #get max as prediction
-        _, predicted = out.max(1)
+            #bring the outputs to the same device
+            TPT_out = TPT_out.to(MEMO_out.device)
+            out = TPT_out + MEMO_out
+            #get max as prediction
+            _, predicted = out.max(1)
 
-        if predicted.item() == label:
-            correct += 1
-        
-        cnt += 1
+            if predicted.item() == label:
+                correct += 1
+            
+            cnt += 1
 
-        #garbage collection
-        torch.cuda.empty_cache()
-
-        print(f"\tAccuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
+            print(f"\tAccuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    tpt_model, tpt_dataA, tpt_dataV2 = TPT("cuda:0")
-    memo_model, memo_dataA, memo_dataV2 = memo("cuda:1")
+    tpt_model, tpt_dataA, tpt_dataV2 = TPT("cuda")
+    memo_model, memo_dataA, memo_dataV2 = memo("cuda")
 
     print("Testing on ImageNet-A")
     test(tpt_model, memo_model, tpt_dataA, memo_dataA, device)
