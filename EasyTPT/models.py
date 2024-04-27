@@ -80,12 +80,6 @@ class EasyPromptLearner(nn.Module):
         ]
         self.tkn_prompts = tokenize(self.txt_prompts)
 
-        ####### test######################à
-
-        # self.enc_prompts = self.clip.encode_text(self.tkn_prompts.cuda())
-
-        #################################
-
         # set the inital context, this will be reused at every new inference
         # this is the context that will be optimized
 
@@ -187,16 +181,6 @@ class EasyTPT(nn.Module):
 
         # breakpoint()
         return logits
-
-    def cosine_similarity(self, images_z, texts_z):
-        # Normalise the image and the text
-        images_z /= images_z.norm(dim=-1, keepdim=True)
-        texts_z /= texts_z.norm(dim=-1, keepdim=True)
-
-        # Evaluate the cosine similarity between the sets of features
-        similarity = images_z @ texts_z.T
-
-        return similarity
 
     def custom_encoder(self, prompts, tokenized_prompts):
         x = prompts + self.clip.positional_embedding
