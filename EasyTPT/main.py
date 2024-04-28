@@ -17,7 +17,7 @@ from torchvision.transforms import InterpolationMode
 from torchvision import transforms
 
 from dataloaders.dataloader import get_dataloaders
-
+from dataloaders.imageNetA import ImageNetA
 
 from EasyTPT.utils import EasyAgumenter
 from EasyTPT.models import EasyTPT
@@ -155,13 +155,13 @@ def main():
 
     ima_root = "datasets/imagenet-a"
     datasetRoot = "datasets"
-    imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=data_transform)
+    imageNet_A = ImageNetA(ima_root, transform=data_transform)
     # breakpoint()
     # val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
-    print("number of test samples: {}".format(len(imageNetA)))
+    print("number of test samples: {}".format(len(imageNet_A)))
     val_loader = torch.utils.data.DataLoader(
-        imageNetA,
+        imageNet_A,
         batch_size=1,
         shuffle=True,
         pin_memory=True,
@@ -176,11 +176,11 @@ def main():
 
     # makes sure the class idx has the right correspondece
     # to the class label
-    ima_names = list(imageNetA.classnames.values())
-    ima_id_mapping = list(imageNetA.classnames.keys())
+    ima_names = list(imageNet_A.classnames.values())
+    ima_id_mapping = list(imageNet_A.classnames.keys())
 
-    imv2_names = list(imageNetV2.classnames.values())
-    imv2_id_mapping = list(imageNetV2.classnames.keys())
+    # imv2_names = list(imageNetV2.classnames.values())
+    # imv2_id_mapping = list(imageNetV2.classnames.keys())
 
     classnames = ima_names
     id_mapping = ima_id_mapping
