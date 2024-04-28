@@ -160,8 +160,8 @@ def main():
         preprocess,
         n_views=AUGS - 1,
     )
-    ima_root = "datasets/imagenet-a"
 
+    ima_root = "datasets/imagenet-a"
     datasetRoot = "datasets"
     imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=data_transform)
     # breakpoint()
@@ -179,9 +179,17 @@ def main():
 
     # some fuckery to use the original TPT prompts
 
-    label_mask = eval("imagenet_a_mask")
-    classnames = [imagenet_classes[i] for i in label_mask]
+    # label_mask = eval("imagenet_a_mask")
+    # classnames = [imagenet_classes[i] for i in label_mask]
 
+    ima_names = list(imageNetA.classnames.values())
+    ima_id_mapping = list(imageNetA.classnames.keys())
+
+    imv2_names = list(imageNetV2.classnames.values())
+    imv2_id_mapping = list(imageNetV2.classnames.keys())
+
+    classnames = ima_names
+    breakpoint()
     # Initialize EasyPromptLearner
     tpt.prompt_learner.prepare_prompts(classnames)
 
@@ -201,7 +209,7 @@ def main():
 
     for i, data in enumerate(val_loader):
 
-        label = int(data["label"][0])
+        label = data["label"][0]
         imgs = data["img"]
         name = data["name"][0]
 
@@ -209,7 +217,7 @@ def main():
         with torch.no_grad():
             tpt_predicted = classnames[out_id]
 
-            if out_id == label:
+            if ima_id_mapping[out_id] == label:
                 tpt_correct += 1
             cnt += 1
 
