@@ -189,7 +189,8 @@ def main():
     imv2_id_mapping = list(imageNetV2.classnames.keys())
 
     classnames = ima_names
-    breakpoint()
+    id_mapping = ima_id_mapping
+
     # Initialize EasyPromptLearner
     tpt.prompt_learner.prepare_prompts(classnames)
 
@@ -217,7 +218,7 @@ def main():
         with torch.no_grad():
             tpt_predicted = classnames[out_id]
 
-            if ima_id_mapping[out_id] == label:
+            if id_mapping[out_id] == label:
                 tpt_correct += 1
             cnt += 1
 
@@ -227,7 +228,7 @@ def main():
         if EVAL_CLIP:
             clip_id = clip_eval(tpt, imgs)
             clip_predicted = classnames[clip_id]
-            if clip_id == label:
+            if id_mapping[clip_id] == label:
                 clip_correct += 1
 
             clip_acc = clip_correct / (cnt)
