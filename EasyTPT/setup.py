@@ -8,7 +8,7 @@ def get_args():
     )
 
     parser.add_argument(
-        "-a",
+        "-ar",
         "--arch",
         type=str,
         help="Architecture to use",
@@ -31,6 +31,15 @@ def get_args():
         type=int,
         help="Number of tts",
         default=1,
+        metavar="",
+    )
+
+    parser.add_argument(
+        "-au",
+        "--augs",
+        type=int,
+        help="Number of augmentations (includes original image)",
+        default=64,
         metavar="",
     )
 

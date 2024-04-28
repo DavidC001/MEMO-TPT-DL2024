@@ -121,6 +121,7 @@ def main():
     ARCH = args["arch"]
     BASE_PROMPT = args["base_prompt"]
     SPLT_CTX = not args["single_context"]
+    AUGS = args["augs"]
 
     tpt = EasyTPT(device, base_prompt=BASE_PROMPT, arch=ARCH, splt_ctx=SPLT_CTX)
 
@@ -157,18 +158,18 @@ def main():
     data_transform = EasyAgumenter(
         base_transform,
         preprocess,
-        n_views=63,
+        n_views=AUGS - 1,
     )
     ima_root = "datasets/imagenet-a"
 
-    # datasetRoot = "datasets"
-    # imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=data_transform())
+    datasetRoot = "datasets"
+    imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=data_transform)
     # breakpoint()
-    val_dataset = DatasetWrapper(ima_root, transform=data_transform)
+    # val_dataset = DatasetWrapper(ima_root, transform=data_transform)
 
-    print("number of test samples: {}".format(len(val_dataset)))
+    print("number of test samples: {}".format(len(imageNetA)))
     val_loader = torch.utils.data.DataLoader(
-        val_dataset,
+        imageNetA,
         batch_size=1,
         shuffle=True,
         pin_memory=True,
@@ -195,21 +196,20 @@ def main():
 
     TTT_STEPS = args["tts"]
     AUGMIX = args["augmix"]
-    NAUG = 63
 
     EVAL_CLIP = args["clip"]
 
-    for i, (imgs, target) in enumerate(val_loader):
+    for i, data in enumerate(val_loader):
 
-        label = target[0]
-        path = target[1]
-        name = classnames[int(label)]
+        label = int(data["label"][0])
+        imgs = data["img"]
+        name = data["name"][0]
 
         out_id = tpt_inference(tpt, imgs, optimizer, TTT_STEPS, optim_state)
         with torch.no_grad():
             tpt_predicted = classnames[out_id]
 
-            if out_id == int(label):
+            if out_id == label:
                 tpt_correct += 1
             cnt += 1
 
@@ -219,7 +219,7 @@ def main():
         if EVAL_CLIP:
             clip_id = clip_eval(tpt, imgs)
             clip_predicted = classnames[clip_id]
-            if clip_id == int(label):
+            if clip_id == label:
                 clip_correct += 1
 
             clip_acc = clip_correct / (cnt)

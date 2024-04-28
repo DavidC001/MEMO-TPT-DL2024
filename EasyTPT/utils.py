@@ -48,7 +48,11 @@ class EasyAgumenter(object):
 
     def __call__(self, x):
 
+        if isinstance(x, np.ndarray):
+            x = transforms.ToPILImage()(x)
+
         image = self.preprocess(self.base_transform(x))
 
         views = [self.preprocess(self.preaugment(x)) for _ in range(self.n_views)]
+
         return [image] + views
