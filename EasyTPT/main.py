@@ -7,30 +7,22 @@ import random
 import math
 import torch
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from copy import deepcopy
-from tqdm import tqdm
-from random import choice
-from PIL import Image
 from pprint import pprint
 from clip import tokenize
 
 from torchvision.transforms import InterpolationMode
 from torchvision import transforms
-from torch.utils.data import DataLoader
 
 from dataloaders.dataloader import get_dataloaders
-from dataloaders.imageNetA import ImageNetA
-from dataloaders.imageNetV2 import ImageNetV2
-from dataloaders.dataloader import get_classes_names
 
-from EasyTPT.utils import DatasetWrapper, EasyAgumenter
+
+from EasyTPT.utils import EasyAgumenter
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
-from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
-from EasyTPT.tpt_classnames.imagenet_variants import imagenet_a_mask
+
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -177,11 +169,13 @@ def main():
 
     ##############################################################################
 
-    # some fuckery to use the original TPT prompts
+    ## some fuckery to use the original TPT prompts
 
     # label_mask = eval("imagenet_a_mask")
     # classnames = [imagenet_classes[i] for i in label_mask]
 
+    # makes sure the class idx has the right correspondece
+    # to the class label
     ima_names = list(imageNetA.classnames.values())
     ima_id_mapping = list(imageNetA.classnames.keys())
 
