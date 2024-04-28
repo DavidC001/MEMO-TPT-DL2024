@@ -17,6 +17,7 @@ from PIL import Image
 from pprint import pprint
 from clip import tokenize
 
+from torchvision.transforms import InterpolationMode
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
@@ -136,9 +137,10 @@ def main():
         tpt = tpt.cuda(device)
 
     ######## DATALOADER #############################################
-    base_trans = transforms.Compose(
+    base_transform = transforms.Compose(
         [
-            transforms.Resize((224, 224)),
+            transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+            transforms.CenterCrop(224),
         ]
     )
 
@@ -153,7 +155,7 @@ def main():
     )
 
     data_transform = EasyAgumenter(
-        base_trans,
+        base_transform,
         preprocess,
         n_views=63,
     )
