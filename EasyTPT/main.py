@@ -22,7 +22,8 @@ from dataloaders.imageNetA import ImageNetA
 from EasyTPT.utils import EasyAgumenter
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
-
+from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
+from EasyTPT.tpt_classnames.imagenet_variants import imagenet_a_mask
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -171,18 +172,19 @@ def main():
 
     ## some fuckery to use the original TPT prompts
 
-    # label_mask = eval("imagenet_a_mask")
-    # classnames = [imagenet_classes[i] for i in label_mask]
-
     # makes sure the class idx has the right correspondece
     # to the class label
-    ima_names = list(imageNet_A.classnames.values())
+    label_mask = eval("imagenet_a_mask")
+    classnames = [imagenet_classes[i] for i in label_mask]
+
     ima_id_mapping = list(imageNet_A.classnames.keys())
+    ima_names = list(imageNet_A.classnames.values())
+    ima_custom_names = [imagenet_classes[int(i)] for i in ima_id_mapping]
 
-    # imv2_names = list(imageNetV2.classnames.values())
     # imv2_id_mapping = list(imageNetV2.classnames.keys())
+    # imv2_names = list(imageNetV2.classnames.values())
 
-    classnames = ima_names
+    classnames = ima_custom_names
     id_mapping = ima_id_mapping
 
     # Initialize EasyPromptLearner
@@ -213,7 +215,10 @@ def main():
             tpt_predicted = classnames[out_id]
 
             if id_mapping[out_id] == label:
+                print(":)")
                 tpt_correct += 1
+            else:
+                print(":(")
             cnt += 1
 
             tpt_acc = tpt_correct / (cnt)
