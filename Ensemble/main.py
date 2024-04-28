@@ -21,7 +21,7 @@ def TPT_get_model(device, base_prompt="This is a photo of a [CLS], ImageNet", ar
         arch=arch,
         splt_ctx=splt_ctx,
         device=device
-    ).to(device)
+    )
     for name, param in model.named_parameters():
         param.requires_grad_(False)
 
@@ -48,7 +48,7 @@ def TPT(device):
 
     return tpt, imageNetA, imageNetV2
 
-def TPT_inference(tpt:EasyTPT, image, device, naug=63):
+def TPT_inference(tpt:EasyTPT, image, device, naug=31):
     img_prep = tpt.preprocess(image)
 
     augmix = AugMix()
@@ -84,6 +84,9 @@ def memo_inference(memo, image, device, naug=8):
 def loss(TPT_outs, memo_outs):
     # calculate the average distribution of the logits, then use entropy to calculate the loss
     
+    #bring the outputs to the same device
+    TPT_outs = TPT_outs.to(memo_outs.device)
+
     # calculate logits
     TPT_logits = TPT_outs - TPT_outs.logsumexp(dim=-1, keepdim=True)
     memo_logits = memo_outs - memo_outs.logsumexp(dim=-1, keepdim=True)
@@ -104,12 +107,17 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
     correct = 0
     cnt = 0
     memo_save = memo_model.state_dict()
+
+    optimizerTPT = TPT_get_optimizer(tpt_model)
+    initOptimTPT = optimizerTPT.state_dict()
+    optimizerMEMO = optim.AdamW(memo_model.parameters(), lr=0.01, weight_decay=0.01)
+    initOptimMEMO = optimizerMEMO.state_dict()
+
     for i in range(len(tpt_data)):
         tpt_model.reset()
+        optimizerTPT.load_state_dict(initOptimTPT)
         memo_model.load_state_dict(memo_save)
-
-        optimizerTPT = TPT_get_optimizer(tpt_model)
-        optimizerMEMO = optim.AdamW(memo_model.parameters(), lr=0.01, weight_decay=0.01)
+        optimizerMEMO.load_state_dict(initOptimMEMO)        
 
         data_TPT = tpt_data[i]
         data_MEMO = memo_data[i]
@@ -121,8 +129,8 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
         name = data_TPT["name"]
 
         for _ in range(niter):
-            TPT_outs = TPT_inference(tpt_model, img_TPT, device)
-            MEMO_outs = memo_inference(memo_model, img_MEMO, device)
+            TPT_outs = TPT_inference(tpt_model, img_TPT, "cuda")
+            MEMO_outs = memo_inference(memo_model, img_MEMO, "cuda")
 
             loss_val = loss(TPT_outs, MEMO_outs)
             loss_val.backward()
@@ -130,25 +138,29 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
             optimizerTPT.step()
             optimizerMEMO.step()
 
-        img_prep = tpt_model.preprocess(img_TPT).unsqueeze(0).to(device)
-        TPT_out = tpt_model(img_prep)
-        MEMO_out = memo_model(img_MEMO.unsqueeze(0).to(device))
-        out = TPT_out + MEMO_out
-        #get max as prediction
-        _, predicted = out.max(1)
+        with torch.no_grad():
+            img_prep = tpt_model.preprocess(img_TPT).unsqueeze(0).to("cuda")
+            TPT_out = tpt_model(img_prep)
+            MEMO_out = memo_model(img_MEMO.unsqueeze(0).to("cuda"))
 
-        if predicted.item() == label:
-            correct += 1
-        
-        cnt += 1
+            #bring the outputs to the same device
+            TPT_out = TPT_out.to(MEMO_out.device)
+            out = TPT_out + MEMO_out
+            #get max as prediction
+            _, predicted = out.max(1)
 
-        print(f"\tAccuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}", end="\r")
+            if predicted.item() == label:
+                correct += 1
+            
+            cnt += 1
+
+            print(f"\tAccuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    tpt_model, tpt_dataA, tpt_dataV2 = TPT(device)
-    memo_model, memo_dataA, memo_dataV2 = memo(device)
+    tpt_model, tpt_dataA, tpt_dataV2 = TPT("cuda")
+    memo_model, memo_dataA, memo_dataV2 = memo("cuda")
 
     print("Testing on ImageNet-A")
     test(tpt_model, memo_model, tpt_dataA, memo_dataA, device)
