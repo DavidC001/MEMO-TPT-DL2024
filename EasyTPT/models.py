@@ -1,3 +1,4 @@
+from copy import deepcopy
 import torch
 from torch import nn
 
@@ -8,7 +9,14 @@ from clip import load, tokenize
 
 
 class EasyPromptLearner(nn.Module):
-    def __init__(self, device, clip, base_prompt="a photo of [CLS]", splt_ctx=False):
+    def __init__(
+        self,
+        device,
+        clip,
+        base_prompt="a photo of [CLS]",
+        splt_ctx=False,
+        classnames=None,
+    ):
         super().__init__()
 
         self.device = device
@@ -16,6 +24,8 @@ class EasyPromptLearner(nn.Module):
         self.clip = clip
         self.tkn_embedder = clip.token_embedding
         self.split_ctx = splt_ctx
+
+        self.prepare_prompts(classnames)
 
     def prepare_prompts(self, classnames):
         print("[PromptLearner] Preparing prompts")
@@ -145,17 +155,29 @@ class EasyTPT(nn.Module):
         base_prompt="a photo of a [CLS]",
         arch="RN50",
         splt_ctx=False,
+        classnames=None,
+        ttt_steps=1,
+        augs=64,
+        lr=0.005,
     ):
         super(EasyTPT, self).__init__()
         self.device = device
 
-        ###TODO: tobe parametrized
+        # switch to GPU if available
+        if not torch.cuda.is_available():
+            print("Using CPU this is no bueno")
+        else:
+            print("Switching to GPU, brace yourself!")
+            torch.cuda.set_device(device)
+            self.cuda(device)
 
+        ###TODO: tobe parametrized
         DOWNLOAD_ROOT = "~/.cache/clip"
         ###
 
         self.base_prompt = base_prompt
-
+        self.ttt_steps = ttt_steps
+        self.augs = augs
         # Load clip
         clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
         self.clip = clip
@@ -163,10 +185,32 @@ class EasyTPT(nn.Module):
         self.image_encoder = clip.encode_image
         self.text_encoder = clip.encode_text
 
-        self.prompt_learner = EasyPromptLearner(device, clip, base_prompt, splt_ctx)
+        for name, param in self.named_parameters():
+            param.requires_grad_(False)
+
+        self.prompt_learner = EasyPromptLearner(
+            device, clip, base_prompt, splt_ctx, classnames
+        )
+
+        trainable_param = self.prompt_learner.parameters()
+        self.optimizer = torch.optim.AdamW(trainable_param, lr)
+        self.optim_state = deepcopy(self.optimizer.state_dict())
 
     def forward(self, x):
 
+        self.eval()
+
+        image = x[0].cuda()
+        images = torch.cat(x, dim=0).cuda()
+
+        self.test_time_tuning(images, ttt_steps=self.ttt_steps)
+
+        with torch.no_grad():
+            out = self.inference(image)
+
+        return out
+
+    def inference(self, x):
         with torch.no_grad():
             image_feat = self.image_encoder(x)
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
@@ -198,4 +242,47 @@ class EasyTPT(nn.Module):
         return x
 
     def reset(self):
+        self.optimizer.load_state_dict(self.optim_state)
         self.prompt_learner.reset()
+
+    def select_confident_samples(self, logits, top):
+
+        batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
+        idx = torch.argsort(batch_entropy, descending=False)[
+            : int(batch_entropy.size()[0] * top)
+        ]
+        return logits[idx], idx
+
+    def avg_entropy(self, outputs):
+        logits = outputs - outputs.logsumexp(
+            dim=-1, keepdim=True
+        )  # logits = outputs.log_softmax(dim=1) [N, 1000]
+        avg_logits = logits.logsumexp(dim=0) - np.log(
+            logits.shape[0]
+        )  # avg_logits = logits.mean(0) [1, 1000]
+        min_real = torch.finfo(avg_logits.dtype).min
+        avg_logits = torch.clamp(avg_logits, min=min_real)
+        return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
+
+    def test_time_tuning(self, images, ttt_steps=4):
+
+        selected_idx = None
+
+        for j in range(ttt_steps):
+
+            output = self.inference(images)
+            if selected_idx is not None:
+                output = output[selected_idx]
+            else:
+                output, selected_idx = self.select_confident_samples(output, 0.10)
+
+            loss = self.avg_entropy(output)
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        return
+
+    def get_optimizer(self):
+        return self.optimizer
