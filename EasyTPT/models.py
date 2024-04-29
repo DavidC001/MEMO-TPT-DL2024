@@ -255,7 +255,7 @@ class EasyTPT(nn.Module):
         Resets the optimizer and the prompt learner to their initial state,
         this has to be run before each new test
         """
-        self.optimizer.load_state_dict(self.optim_state)
+        self.optimizer.load_state_dict(deepcopy(self.optim_state))
         self.prompt_learner.reset()
 
     def select_confident_samples(self, logits, top):
