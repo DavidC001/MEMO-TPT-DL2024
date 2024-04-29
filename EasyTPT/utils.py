@@ -8,7 +8,8 @@ import torchvision.transforms as transforms
 
 import datasets
 import torchvision.datasets as datasets
-
+from torchvision.transforms import InterpolationMode
+from torchvision import transforms
 
 from typing import Any, Tuple
 
@@ -56,3 +57,31 @@ class EasyAgumenter(object):
         views = [self.preprocess(self.preaugment(x)) for _ in range(self.n_views)]
 
         return [image] + views
+
+
+def get_transforms(augs=64):
+
+    base_transform = transforms.Compose(
+        [
+            transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+            transforms.CenterCrop(224),
+        ]
+    )
+
+    preprocess = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.48145466, 0.4578275, 0.40821073],
+                std=[0.26862954, 0.26130258, 0.27577711],
+            ),
+        ]
+    )
+
+    data_transform = EasyAgumenter(
+        base_transform,
+        preprocess,
+        n_views=augs - 1,
+    )
+
+    return data_transform
