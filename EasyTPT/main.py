@@ -110,9 +110,8 @@ def main():
 
         out = tpt(imgs)
 
-        out_id = out.argmax(1).item()
-
         with torch.no_grad():
+            out_id = out.argmax(1).item()
             tpt_predicted = classnames[out_id]
 
             if id_mapping[out_id] == label:
