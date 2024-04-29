@@ -178,6 +178,7 @@ class EasyTPT(nn.Module):
         self.base_prompt = base_prompt
         self.ttt_steps = ttt_steps
         self.augs = augs
+
         # Load clip
         clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
         self.clip = clip
@@ -185,13 +186,16 @@ class EasyTPT(nn.Module):
         self.image_encoder = clip.encode_image
         self.text_encoder = clip.encode_text
 
+        # freeze the parameters
         for name, param in self.named_parameters():
             param.requires_grad_(False)
 
+        # create the prompt learner
         self.prompt_learner = EasyPromptLearner(
             device, clip, base_prompt, splt_ctx, classnames
         )
 
+        # create optimizer and save the state
         trainable_param = self.prompt_learner.parameters()
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
@@ -211,6 +215,7 @@ class EasyTPT(nn.Module):
         return out
 
     def inference(self, x):
+
         with torch.no_grad():
             image_feat = self.image_encoder(x)
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
@@ -227,6 +232,10 @@ class EasyTPT(nn.Module):
         return logits
 
     def custom_encoder(self, prompts, tokenized_prompts):
+        """
+        Custom clip text encoder, unlike the original clip encoder this one
+        takes the prompts embeddings from the prompt learner
+        """
         x = prompts + self.clip.positional_embedding
         x = x.permute(1, 0, 2).type(self.dtype)  # NLD -> LND
         x = self.clip.transformer(x)
@@ -242,11 +251,23 @@ class EasyTPT(nn.Module):
         return x
 
     def reset(self):
+        """
+        Resets the optimizer and the prompt learner to their initial state,
+        this has to be run before each new test
+        """
         self.optimizer.load_state_dict(self.optim_state)
         self.prompt_learner.reset()
 
     def select_confident_samples(self, logits, top):
+        """
+        Performs confidence selection, will return the indexes of the
+        augmentations with the highest confidence as well as the filtered
+        logits
 
+        Parameters:
+        - logits (torch.Tensor): the logits of the model [NAUGS, NCLASSES]
+        - top (float): the percentage of top augmentations to use
+        """
         batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
         idx = torch.argsort(batch_entropy, descending=False)[
             : int(batch_entropy.size()[0] * top)
@@ -265,7 +286,15 @@ class EasyTPT(nn.Module):
         return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
 
     def test_time_tuning(self, images, ttt_steps=4):
+        """
+        Perform prompt tuning ttt_steps times
 
+        Parameters:
+        - images (torch.Tensor): the augmentations batch of size [NAUGS, 3, 224, 224]
+        - ttt_steps (int): the number of tuning steps
+
+        Doesn't return anything but updates the prompt context
+        """
         selected_idx = None
 
         for j in range(ttt_steps):
@@ -285,4 +314,10 @@ class EasyTPT(nn.Module):
         return
 
     def get_optimizer(self):
+        """
+        Returns the optimizer
+
+        Returns:
+        - torch.optim: the optimizer
+        """
         return self.optimizer
