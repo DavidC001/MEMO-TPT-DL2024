@@ -62,13 +62,13 @@ class EasyPromptLearner(nn.Module):
         self.tkn_pad = tkn_pad[:, 2:]
 
         # load segments to CUDA, be ready to be embedded
-        self.tkn_sot = self.tkn_sot.cuda(self.device)
-        self.tkn_prefix = self.tkn_prefix.cuda(self.device)
-        self.tkn_suffix = self.tkn_suffix.cuda(self.device)
-        self.tkn_eot = self.tkn_eot.cuda(self.device)
-        self.tkn_pad = self.tkn_pad.cuda(self.device)
+        self.tkn_sot = self.tkn_sot.to(self.device)
+        self.tkn_prefix = self.tkn_prefix.to(self.device)
+        self.tkn_suffix = self.tkn_suffix.to(self.device)
+        self.tkn_eot = self.tkn_eot.to(self.device)
+        self.tkn_pad = self.tkn_pad.to(self.device)
 
-        self.tkn_cls = tkn_cls.cuda(self.device)
+        self.tkn_cls = tkn_cls.to(self.device)
 
         # gets the embeddings
         with torch.no_grad():
@@ -163,14 +163,6 @@ class EasyTPT(nn.Module):
         super(EasyTPT, self).__init__()
         self.device = device
 
-        # switch to GPU if available
-        if not torch.cuda.is_available():
-            print("Using CPU this is no bueno")
-        else:
-            print("Switching to GPU, brace yourself!")
-            torch.cuda.set_device(device)
-            self.cuda(device)
-
         ###TODO: tobe parametrized
         DOWNLOAD_ROOT = "~/.cache/clip"
         ###
@@ -178,6 +170,7 @@ class EasyTPT(nn.Module):
         self.base_prompt = base_prompt
         self.ttt_steps = ttt_steps
         self.augs = augs
+        self.selected_idx = None
 
         # Load clip
         clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
@@ -204,18 +197,19 @@ class EasyTPT(nn.Module):
 
         self.eval()
 
-        image = x[0].cuda()
-        images = torch.cat(x, dim=0).cuda()
-
-        self.test_time_tuning(images, ttt_steps=self.ttt_steps)
-
-        with torch.no_grad():
-            out = self.inference(image)
-
-        return out
+        if isinstance(x, list):
+            x = torch.stack(x).to(self.device)
+            logits = self.inference(x)
+            if self.selected_idx is not None:
+                logits = logits[self.selected_idx]
+            else:
+                logits, self.selected_idx = self.select_confident_samples(logits, 0.10)
+        else:
+            x = x.to(self.device).unsqueeze(0)
+            logits = self.inference(x)
+        return logits
 
     def inference(self, x):
-
         with torch.no_grad():
             image_feat = self.image_encoder(x)
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
@@ -228,7 +222,6 @@ class EasyTPT(nn.Module):
         logit_scale = self.clip.logit_scale.exp()
         logits = logit_scale * image_feat @ txt_features.t()
 
-        # breakpoint()
         return logits
 
     def custom_encoder(self, prompts, tokenized_prompts):
@@ -257,6 +250,7 @@ class EasyTPT(nn.Module):
         """
         self.optimizer.load_state_dict(deepcopy(self.optim_state))
         self.prompt_learner.reset()
+        self.selected_idx = None
 
     def select_confident_samples(self, logits, top):
         """
@@ -285,33 +279,22 @@ class EasyTPT(nn.Module):
         avg_logits = torch.clamp(avg_logits, min=min_real)
         return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
 
-    def test_time_tuning(self, images, ttt_steps=4):
-        """
-        Perform prompt tuning ttt_steps times
+    def predict(self, images, ttt_steps=4):
 
-        Parameters:
-        - images (torch.Tensor): the augmentations batch of size [NAUGS, 3, 224, 224]
-        - ttt_steps (int): the number of tuning steps
+        self.reset()
 
-        Doesn't return anything but updates the prompt context
-        """
-        selected_idx = None
-
-        for j in range(ttt_steps):
-
-            output = self.inference(images)
-            if selected_idx is not None:
-                output = output[selected_idx]
-            else:
-                output, selected_idx = self.select_confident_samples(output, 0.10)
-
-            loss = self.avg_entropy(output)
-
+        for _ in range(ttt_steps):
+            out = self(images)
+            loss = self.avg_entropy(out)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+        with torch.no_grad():
+            out = self(images[0])
+            out_id = out.argmax(1).item()
+            prediction = self.prompt_learner.classnames[out_id]
 
-        return
+        return out_id, prediction
 
     def get_optimizer(self):
         """
