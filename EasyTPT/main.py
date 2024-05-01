@@ -72,7 +72,7 @@ def main():
         imv2_names,
         imv2_custom_names,
         imv2_label_mapping,
-    ) = get_datasets(data_root, augmix=AUGMIX, augs=AUGS)
+    ) = get_datasets(data_root, augmix=AUGMIX, augs=AUGS, all_classes=False)
 
     print("number of test samples: {}".format(len(imageNet_A)))
 

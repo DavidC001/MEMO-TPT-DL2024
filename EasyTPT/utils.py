@@ -97,7 +97,7 @@ def get_transforms(augs=64):
     return data_transform
 
 
-def get_datasets(data_root, augmix=False, augs=64):
+def get_datasets(data_root, augmix=False, augs=64, all_classes=True):
     """
     Returns the ImageNetA and ImageNetV2 datasets.
 
@@ -105,11 +105,12 @@ def get_datasets(data_root, augmix=False, augs=64):
     - data_root (str): The root directory of the datasets.
     - augmix (bool): Whether to use AugMix or not.
     - augs (int): The number of augmentations to use.
+    - all_classes (bool): Whether to use all classes or not.
 
     Returns:
     - imageNet_A (ImageNetA): The ImageNetA dataset.
-    - ima_names (list): The original 200 classnames in ImageNetA.
-    - ima_custom_names (list): The retouched 200 classnames in ImageNetA.
+    - ima_names (list): The original classnames in ImageNetA.
+    - ima_custom_names (list): The retouched  classnames in ImageNetA.
     - ima_id_mapping (list): The mapping between the index of the classname and the ImageNet label
 
     same for ImageNetV2
@@ -154,13 +155,22 @@ def get_datasets(data_root, augmix=False, augs=64):
         transform=data_transform,
     )
 
+    imv2_label_mapping = list(imageNet_V2.classnames.keys())
+    imv2_names = list(imageNet_V2.classnames.values())
+    imv2_custom_names = [imagenet_classes[int(i)] for i in imv2_label_mapping]
+
     ima_label_mapping = list(imageNet_A.classnames.keys())
     ima_names = list(imageNet_A.classnames.values())
     ima_custom_names = [imagenet_classes[int(i)] for i in ima_label_mapping]
 
-    imv2_label_mapping = list(imageNet_V2.classnames.keys())
-    imv2_names = list(imageNet_V2.classnames.values())
-    imv2_custom_names = [imagenet_classes[int(i)] for i in imv2_label_mapping]
+    if all_classes:
+        ima_names += [name for name in imv2_names if name not in ima_names]
+        ima_custom_names += [
+            name for name in imv2_custom_names if name not in ima_custom_names
+        ]
+        ima_label_mapping += [
+            map for map in imv2_label_mapping if map not in ima_label_mapping
+        ]
 
     return (
         imageNet_A,
