@@ -13,6 +13,12 @@ from torchvision import transforms
 
 from typing import Any, Tuple
 
+from dataloaders.imageNetA import ImageNetA
+from dataloaders.imageNetV2 import ImageNetV2
+from torchvision.transforms.v2 import AugMix
+
+from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
+
 
 class DatasetWrapper(datasets.ImageFolder):
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
@@ -36,16 +42,20 @@ class DatasetWrapper(datasets.ImageFolder):
 
 
 class EasyAgumenter(object):
-    def __init__(self, base_transform, preprocess, n_views=63):
+    def __init__(self, base_transform, preprocess, augmix, n_views=63):
         self.base_transform = base_transform
         self.preprocess = preprocess
         self.n_views = n_views
-        self.preaugment = transforms.Compose(
-            [
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-            ]
-        )
+
+        if augmix:
+            self.preaugment = AugMix()
+        else:
+            self.preaugment = transforms.Compose(
+                [
+                    transforms.RandomResizedCrop(224),
+                    transforms.RandomHorizontalFlip(),
+                ]
+            )
 
     def __call__(self, x):
 
@@ -85,3 +95,80 @@ def get_transforms(augs=64):
     )
 
     return data_transform
+
+
+def get_datasets(data_root, augmix=False, augs=64):
+    """
+    Returns the ImageNetA and ImageNetV2 datasets.
+
+    Parameters:
+    - data_root (str): The root directory of the datasets.
+    - augmix (bool): Whether to use AugMix or not.
+    - augs (int): The number of augmentations to use.
+
+    Returns:
+    - imageNet_A (ImageNetA): The ImageNetA dataset.
+    - ima_names (list): The original 200 classnames in ImageNetA.
+    - ima_custom_names (list): The retouched 200 classnames in ImageNetA.
+    - ima_id_mapping (list): The mapping between the index of the classname and the ImageNet label
+
+    same for ImageNetV2
+
+    For instance the first element of ima_names corresponds to the label '90'.  After running the
+    inference run the predicted output through the ima_id_mapping to recover the correct class label.
+
+    out = tpt(inputs)
+    pred = out.argmax().item()
+    out_id = ima_id_mapping[pred]
+
+    """
+    base_transform = transforms.Compose(
+        [
+            transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+            transforms.CenterCrop(224),
+        ]
+    )
+
+    preprocess = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.48145466, 0.4578275, 0.40821073],
+                std=[0.26862954, 0.26130258, 0.27577711],
+            ),
+        ]
+    )
+
+    data_transform = EasyAgumenter(
+        base_transform,
+        preprocess,
+        augmix=augmix,
+        n_views=augs - 1,
+    )
+
+    imageNet_A = ImageNetA(
+        os.path.join(data_root, "imagenet-a"), transform=data_transform
+    )
+    imageNet_V2 = ImageNetV2(
+        os.path.join(data_root, "imagenetv2-matched-frequency-format-val"),
+        transform=data_transform,
+    )
+
+    ima_label_mapping = list(imageNet_A.classnames.keys())
+    ima_names = list(imageNet_A.classnames.values())
+    ima_custom_names = [imagenet_classes[int(i)] for i in ima_label_mapping]
+
+    imv2_label_mapping = list(imageNet_V2.classnames.keys())
+    imv2_names = list(imageNet_V2.classnames.values())
+    imv2_custom_names = [imagenet_classes[int(i)] for i in imv2_label_mapping]
+
+    return (
+        imageNet_A,
+        ima_names,
+        ima_custom_names,
+        ima_label_mapping,
+        imageNet_V2,
+        imv2_names,
+        imv2_custom_names,
+        imv2_label_mapping,
+    )
