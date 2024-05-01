@@ -194,7 +194,10 @@ class EasyTPT(nn.Module):
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
     def forward(self, x):
-
+        """
+        If x is a list of augmentations, run the confidence selection,
+        otherwise just run the inference
+        """
         self.eval()
 
         if isinstance(x, list):
