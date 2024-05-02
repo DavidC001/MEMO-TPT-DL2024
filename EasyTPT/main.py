@@ -4,14 +4,14 @@ sys.path.append(".")
 
 
 import torch
-
+import numpy as np
 
 from pprint import pprint
 from clip import tokenize
 
 from dataloaders.imageNetA import ImageNetA
 
-from EasyTPT.utils import get_transforms
+from EasyTPT.utils import get_transforms, get_datasets
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
 from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
@@ -35,6 +35,18 @@ def clip_eval(model, img_prep):
     return clip_id
 
 
+def avg_entropy(outputs):
+    logits = outputs - outputs.logsumexp(
+        dim=-1, keepdim=True
+    )  # logits = outputs.log_softmax(dim=1) [N, 1000]
+    avg_logits = logits.logsumexp(dim=0) - np.log(
+        logits.shape[0]
+    )  # avg_logits = logits.mean(0) [1, 1000]
+    min_real = torch.finfo(avg_logits.dtype).min
+    avg_logits = torch.clamp(avg_logits, min=min_real)
+    return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
+
+
 def main():
     args = get_args()
     pprint(args)
@@ -47,38 +59,25 @@ def main():
     AUGS = args["augs"]
     TTT_STEPS = args["tts"]
     AUGMIX = args["augmix"]
-    ######## DATALOADER #############################################
+    EVAL_CLIP = args["clip"]
 
-    ima_root = "datasets/imagenet-a"
-    datasetRoot = "datasets"
-    imageNet_A = ImageNetA(ima_root, transform=get_transforms(augs=AUGS))
-    # breakpoint()
-    # val_dataset = DatasetWrapper(ima_root, transform=data_transform)
+    data_root = "datasets"
+
+    (
+        imageNet_A,
+        ima_names,
+        ima_custom_names,
+        ima_label_mapping,
+        imageNet_V2,
+        imv2_names,
+        imv2_custom_names,
+        imv2_label_mapping,
+    ) = get_datasets(data_root, augmix=AUGMIX, augs=AUGS, all_classes=False)
 
     print("number of test samples: {}".format(len(imageNet_A)))
-    val_loader = torch.utils.data.DataLoader(
-        imageNet_A,
-        batch_size=1,
-        shuffle=True,
-        pin_memory=True,
-    )
-
-    ##############################################################################
-    # makes sure the class idx has the right correspondece
-    # to the class label
-    label_mask = eval("imagenet_a_mask")
-    classnames = [imagenet_classes[i] for i in label_mask]
-
-    ima_id_mapping = list(imageNet_A.classnames.keys())
-    ima_names = list(imageNet_A.classnames.values())
-
-    ima_custom_names = [imagenet_classes[int(i)] for i in ima_id_mapping]
-    # breakpoint()
-    # imv2_id_mapping = list(imageNetV2.classnames.keys())
-    # imv2_names = list(imageNetV2.classnames.values())
 
     classnames = ima_custom_names
-    id_mapping = ima_id_mapping
+    id_mapping = ima_label_mapping
 
     LR = 0.005
 
@@ -97,23 +96,34 @@ def main():
     clip_correct = 0
     cnt = 0
 
-    EVAL_CLIP = args["clip"]
-
-    for i, data in enumerate(val_loader):
-
-        label = data["label"][0]
+    idxs = [i for i in range(len(imageNet_A))]
+    np.random.shuffle(idxs)
+    # for i, data in enumerate(imageNet_A):
+    for i in idxs:
+        data = imageNet_A[i]
+        label = data["label"]
         imgs = data["img"]
-        name = data["name"][0]
+        name = data["name"]
 
         with torch.no_grad():
             tpt.reset()
 
-        out = tpt(imgs)
+        optimizer = EasyTPT.get_optimizer(tpt)
+
+        for _ in range(TTT_STEPS):
+
+            out = tpt(imgs)
+            loss = avg_entropy(out)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
         with torch.no_grad():
+            out = tpt(imgs[0])
             out_id = out.argmax(1).item()
             tpt_predicted = classnames[out_id]
-
+            # if True:
+            #     out_id, tpt_predicted = tpt.predict(imgs, ttt_steps=TTT_STEPS)
             if id_mapping[out_id] == label:
                 print(":)")
                 tpt_correct += 1
