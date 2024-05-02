@@ -1,6 +1,6 @@
 import sys
 sys.path.append('.')
-from memo.test_calls.test_adapt import test_adapt
+from memo.test_calls.test_adapt import memo_test_adapt
 
 if __name__ == "__main__":
     model_name = 'resnet'
@@ -10,4 +10,4 @@ if __name__ == "__main__":
     opt = 'SGD' if model_name == 'resnet' else 'adamw'
     niter = 1
     prior_strength = 0.94
-    test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_strength)
+    memo_test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_strength)
