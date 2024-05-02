@@ -10,12 +10,12 @@ from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
 from copy import deepcopy
 
 from dataloaders.dataloader import get_dataloaders, get_classes_names
-
+from EasyTPT.utils import get_datasets
 
 from EasyTPT.models import EasyTPT
-from EasyTPT.utils import get_transforms as TPT_get_transforms
+from EasyTPT.main import avg_entropy
 
-def TPT_get_model(device, base_prompt="A bad photo of a [CLS], ImageNet", arch="RN50", splt_ctx= True):
+def TPT_get_model(device, base_prompt="A bad photo of a [CLS].", arch="RN50", splt_ctx= True):
     model = EasyTPT(
         base_prompt=base_prompt,
         arch=arch,
@@ -23,8 +23,6 @@ def TPT_get_model(device, base_prompt="A bad photo of a [CLS], ImageNet", arch="
         classnames=imagenet_classes,
         device=device
     )
-    for name, param in model.named_parameters():
-        param.requires_grad_(False)
 
     return model
 def TPT(device, naug=64):
@@ -37,19 +35,19 @@ def TPT(device, naug=64):
         print("Using GPU, brace yourself!")
 
     datasetRoot = "datasets"
-    imageNetA, imageNetV2 = get_dataloaders(datasetRoot, transform=TPT_get_transforms(naug))
+    imageNetA, _, _, _, imageNetV2, _, _, _ = get_datasets(datasetRoot, naug)
 
     return tpt, imageNetA, imageNetV2
 
 def TPT_inference(tpt:EasyTPT, images, device, temp=1):
-    outputs = tpt.inference(torch.stack(images).to(device=device))
-    outputs, _ = tpt.select_confident_samples(outputs, 0.141)
+    outputs = tpt(images)
 
     outputs = outputs / temp
     outputs = torch.nn.functional.log_softmax(outputs, dim=1)
     
     return outputs
 
+from memo.utils.adapt_helpers import adapt_single, test_single
 from memo.utils.adapt_helpers import te_transforms
 from memo.utils.adapt_helpers import adapt_single, test_single
 from memo.utils.train_helpers import build_model
@@ -74,6 +72,13 @@ def memo_inference(memo, image, device, naug=8, temp=1):
 
     return outputs
 
+def marginal_entropy(outputs):
+    logits = outputs - outputs.logsumexp(dim=-1, keepdim=True)
+    avg_logits = logits.logsumexp(dim=0) - np.log(logits.shape[0])
+    min_real = torch.finfo(avg_logits.dtype).min
+    avg_logits = torch.clamp(avg_logits, min=min_real)
+    return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1), avg_logits
+
 def entropy(logits):
     return -(torch.exp(logits) * logits).sum(dim=-1)
 
@@ -87,17 +92,18 @@ def loss(TPT_outs, memo_outs):
     avg_TPT_outs = torch.logsumexp(TPT_outs, dim=0) - torch.log(torch.tensor(TPT_outs.shape[0]))
     min_real = torch.finfo(avg_TPT_outs.dtype).min
     avg_TPT_outs = torch.clamp(avg_TPT_outs, min=min_real)
-    TPT_ent = entropy(avg_TPT_outs)
     #average MEMO outputs
     avg_memo_outs = torch.logsumexp(memo_outs, dim=0) - torch.log(torch.tensor(memo_outs.shape[0]))
     min_real = torch.finfo(avg_memo_outs.dtype).min
     avg_memo_outs = torch.clamp(avg_memo_outs, min=min_real)
-    memo_ent = entropy(avg_memo_outs)
 
-    scale = TPT_ent / (TPT_ent + memo_ent)
-    if scale > 0.8: scale = 0.8
-    if scale < 0.2: scale = 0.2
-    print(f"\t\tscale TPT: {1-scale} - TPT entropy: {TPT_ent}\n\t\tscale MEMO: {scale} - MEMO entropy: {memo_ent}")
+    scale = 0.5
+    with torch.no_grad():
+        memo_ent = entropy(avg_memo_outs)
+        TPT_ent = entropy(avg_TPT_outs)
+        scale = TPT_ent / (TPT_ent + memo_ent)
+    
+    #print(f"\t\tscale TPT: {1-scale} - TPT entropy: {TPT_ent}\n\t\tscale MEMO: {scale} - MEMO entropy: {memo_ent}")
 
     # calculate average logits
     avg_logits = (1-scale) * avg_TPT_outs + scale * avg_memo_outs
@@ -138,36 +144,61 @@ def printOutput(output, top=5, pre=""):
 def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
     classnames = get_classes_names()
     correct = 0
+    correctTPT = 0
+    correctMEMO = 0
     cnt = 0
 
-    initOptimMEMO = optim.AdamW(memo_model.parameters(), lr=0.01, weight_decay=0.01)
-
-    indx = range(len(tpt_data))
-    #shuffle the data
-    indx = np.random.permutation(indx)
+    initOptimMEMO = optim.AdamW(memo_model.parameters(), lr= 0.00025, weight_decay=0)
 
     TPT_temp = 1
     MEMO_temp = 1
 
+    #shuffle the data
+    indx = np.random.permutation(range(len(tpt_data)))
+
     for i in indx:
+        cnt += 1
         tpt_model.reset()
         memo = deepcopy(memo_model)
         optimizerMEMO = deepcopy(initOptimMEMO)
         #breakpoint()  
 
-        data_TPT = tpt_data[i]
-        data_MEMO = memo_data[i]
-
-        img_TPT = data_TPT["img"]
-        img_MEMO = data_MEMO["img"]
+        img_TPT = tpt_data[i]["img"]
+        img_MEMO = memo_data[i]["img"].to(device)
         
-        label = int(data_TPT["label"])
-        name = data_TPT["name"]
+        label = int(tpt_data[i]["label"])
+        label2 = int(memo_data[i]["label"])
+        assert label == label2 #check if the labels are the same
+        name = tpt_data[i]["name"]
 
         print (f"Testing on {i} - name: {name} - label: {label}")
 
+        for _ in range(niter):
+            out = tpt_model(img_TPT)
+            loss_val = avg_entropy(out)
+            tpt_model.optimizer.zero_grad()
+            loss_val.backward()
+            tpt_model.optimizer.step()
+        
+        output_base_TPT = tpt_model(img_TPT[0]) 
+        predicted = output_base_TPT.argmax(1)
+        # delete the tensor to free up memory
+        del output_base_TPT
+        if predicted.item() == label: 
+            correctTPT += 1
+        print(f"TPT accuracy: {correctTPT/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
+
+        adapt_single(memo, img_MEMO, optimizerMEMO, marginal_entropy, niter, 8, 0.94, device)
+        correctMEMO += test_single(memo, img_MEMO, label, 0.94, device)[0]
+        print(f"MEMO accuracy: {correctMEMO/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
+
+        tpt_model.reset()
+        memo = deepcopy(memo_model)
+        optimizerMEMO = deepcopy(initOptimMEMO)
+
+        #print ("Ensemble output:")
         for i in range(niter):
-            print(f"\tIteration {i} / {niter}")
+            #print(f"\tIteration {i} / {niter}")
             TPT_outs = TPT_inference(tpt_model, img_TPT, "cuda", temp=TPT_temp)
             #print(f"\t\tTPT output:")
             #printOutput(torch.exp(TPT_outs), pre="\t\t\t")
@@ -187,30 +218,28 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
 
 
         with torch.no_grad():
-            TPT_out = torch.log_softmax(tpt_model.inference(img_TPT[0].unsqueeze(0).to(device)) / TPT_temp, dim=1)
+            TPT_out = torch.log_softmax(tpt_model(img_TPT[0].to(device)) / TPT_temp, dim=1)
             TPT_ent = entropy(TPT_out[0])
-            TPT_prob = torch.exp(TPT_out)
-            print(f"TPT output:")
-            printOutput(TPT_prob, pre="\t")
+            #TPT_prob = torch.exp(TPT_out)
+            #print(f"TPT output:")
+            #printOutput(TPT_prob, pre="\t")
 
             MEMO_out = torch.log_softmax(memo(img_MEMO.unsqueeze(0).to(device)) / MEMO_temp, dim=1)
             MEMO_ent = entropy(MEMO_out[0])
-            MEMO_prob = torch.exp(MEMO_out)
-            print(f"MEMO output:")
-            printOutput(MEMO_prob, pre="\t")
+            #MEMO_prob = torch.exp(MEMO_out)
+            #print(f"MEMO output:")
+            #printOutput(MEMO_prob, pre="\t")
 
             TPT_out = TPT_out.to(MEMO_out.device) #bring the outputs to the same device
 
             scale = TPT_ent / (TPT_ent + MEMO_ent)
-            if scale > 0.8: scale = 0.8
-            if scale < 0.2: scale = 0.2
 
             #ensemble
             out = TPT_out * (1-scale) + MEMO_out * scale
             #to probability
             out = torch.exp(out)
-            print(f"Ensemble output:")
-            printOutput(out, pre="\t")
+            #print(f"Ensemble output:")
+            #printOutput(out, pre="\t")
 
             #breakpoint()
             #get max as prediction
@@ -219,9 +248,8 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
             if predicted.item() == label:
                 correct += 1
             
-            cnt += 1
 
-            print(f"\tAccuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
+            print(f"Ensemble accuracy: {correct/cnt} - predicted: {classnames[predicted.item()]} - label: {name} - tested: {cnt} / {len(tpt_data)}")
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
