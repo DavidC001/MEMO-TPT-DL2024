@@ -21,8 +21,11 @@ def memo_build_model(model_name, device, prior_strength=1):
     if model_name == 'resnext':
         weights = models.ResNeXt101_32X8D_Weights.DEFAULT
         net = models.resnext101_32x8d(weights=weights).to(device=device)
-    elif model_name == 'vit':
+    elif model_name == 'vit16b':
         weights = models.ViT_B_16_Weights.DEFAULT
+        net = models.vit_b_16(weights=weights).to(device=device)
+    elif model_name == 'vit14h':
+        weights = models.ViT_H_14_Weights.DEFAULT
         net = models.vit_b_16(weights=weights).to(device=device)
     else:
         weights = models.ResNet50_Weights.DEFAULT

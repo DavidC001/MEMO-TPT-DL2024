@@ -17,12 +17,10 @@ memo_transforms = transforms.Compose([transforms.ToPILImage(),
 names = get_classes_names()
 
 
-def memo_adapt_single(model, image, optimizer, criterion, niter, batch_size, prior_strength, device):
+def memo_adapt_single(model, image, optimizer, criterion, niter, batch_size, device):
     model.eval()
     # Using AugMix augmentation provided directly by pytorch
     augmenter = v2.AugMix()
-
-    nn.BatchNorm2d.prior = prior_strength
 
     for iteration in range(niter):
         inputs = [augmenter(image) for _ in range(batch_size)]
@@ -32,12 +30,10 @@ def memo_adapt_single(model, image, optimizer, criterion, niter, batch_size, pri
         loss, logits = criterion(outputs)
         loss.backward()
         optimizer.step()
-    nn.BatchNorm2d.prior = 1
 
 
-def memo_test_single(model, image, label, prior_strength, device):
+def memo_test_single(model, image, label, device):
     model.eval()
-    nn.BatchNorm2d.prior = prior_strength
 
     image = image.unsqueeze(0)
 
@@ -47,5 +43,4 @@ def memo_test_single(model, image, label, prior_strength, device):
         # print( "Predicted: ", names[predicted.item()], " Label: ", names[label])
         confidence = nn.functional.softmax(outputs, dim=1).squeeze()[predicted].item()
     correctness = 1 if predicted.item() == label else 0
-    nn.BatchNorm2d.prior = 1
     return correctness, confidence
