@@ -59,3 +59,11 @@ def memo_test_adapt(model_name, batch_size, lr, weight_decay, opt, niter, prior_
 
     print(f'MEMO adapt test error V2 {(1 - np.mean(correct)) * 100:.2f}')
 
+
+def memo_optimizer_model(model_name, lr, weight_decay, opt, prior_strength):
+    net = memo_build_model(model_name=model_name, device=DEVICE, prior_strength=prior_strength)
+    optimizer = optim.SGD(net.parameters(), lr=lr, weight_decay=weight_decay)
+    if opt == 'adamw':
+        optimizer = optim.AdamW(net.parameters(), lr=lr, weight_decay=weight_decay)
+
+    return net, optimizer
