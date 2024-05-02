@@ -48,7 +48,14 @@ class EasyAgumenter(object):
         self.n_views = n_views
 
         if augmix:
-            self.preaugment = AugMix()
+
+            self.preaugment = transforms.Compose(
+                [
+                    AugMix(),
+                    transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
+                    transforms.CenterCrop(224),
+                ]
+            )
         else:
             self.preaugment = transforms.Compose(
                 [
