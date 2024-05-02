@@ -26,7 +26,7 @@ def memo_build_model(model_name, device, prior_strength=1):
         net = models.vit_b_16(weights=weights).to(device=device)
     elif model_name == 'vit14h':
         weights = models.ViT_H_14_Weights.DEFAULT
-        net = models.vit_b_16(weights=weights).to(device=device)
+        net = models.vit_h_14(weights=weights).to(device=device)
     else:
         weights = models.ResNet50_Weights.DEFAULT
         net = models.resnet50(weights=weights).to(device=device)
