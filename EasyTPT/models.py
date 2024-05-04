@@ -21,8 +21,10 @@ class EasyPromptLearner(nn.Module):
 
         self.device = device
         self.base_prompt = base_prompt
-        self.clip = clip
         self.tkn_embedder = clip.token_embedding
+        # set requires_grad to False
+        self.tkn_embedder.requires_grad_(False)
+
         self.split_ctx = splt_ctx
 
         self.prepare_prompts(classnames)
@@ -94,14 +96,17 @@ class EasyPromptLearner(nn.Module):
         # this is the context that will be optimized
 
         if self.split_ctx:
-            self.emb_prefix = nn.Parameter(self.emb_prefix)
-            self.emb_suffix = nn.Parameter(self.emb_suffix)
             self.pre_init_state = self.emb_prefix.detach().clone()
             self.suf_init_state = self.emb_suffix.detach().clone()
+            self.emb_prefix = nn.Parameter(self.emb_prefix)
+            self.emb_suffix = nn.Parameter(self.emb_suffix)
+            self.register_parameter("emb_prefix", self.emb_prefix)
+            self.register_parameter("emb_suffix", self.emb_suffix)
         else:
             self.ctx = torch.cat((self.emb_prefix, self.emb_suffix), dim=1)
-            self.ctx = nn.Parameter(self.ctx)
             self.ctx_init_state = self.ctx.detach().clone()
+            self.ctx = nn.Parameter(self.ctx)
+            self.register_parameter("ctx", self.ctx)
 
     def build_ctx(self):
         prompts = []
@@ -142,10 +147,10 @@ class EasyPromptLearner(nn.Module):
     def reset(self):
 
         if self.split_ctx:
-            self.emb_prefix.data.copy_(self.pre_init_state.data)  # to be optimized
-            self.emb_suffix.data.copy_(self.suf_init_state.data)  # to be optimized
+            self.emb_prefix.data.copy_(self.pre_init_state)  # to be optimized
+            self.emb_suffix.data.copy_(self.suf_init_state)  # to be optimized
         else:
-            self.ctx.data.copy_(self.ctx_init_state.data)  # to be optimized
+            self.ctx.data.copy_(self.ctx_init_state)  # to be optimized
 
 
 class EasyTPT(nn.Module):
@@ -188,10 +193,17 @@ class EasyTPT(nn.Module):
             device, clip, base_prompt, splt_ctx, classnames
         )
 
+
         # create optimizer and save the state
-        trainable_param = self.prompt_learner.parameters()
+        trainable_param = []
+        for name, param in self.named_parameters():
+            if param.requires_grad:
+                print(f"[EasyTPT] Training parameter: {name}")
+                trainable_param.append(param)
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
+
+        breakpoint()
 
     def forward(self, x):
         """
@@ -199,10 +211,13 @@ class EasyTPT(nn.Module):
         otherwise just run the inference
         """
         self.eval()
+        import time
+        start = time.time()
 
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
             logits = self.inference(x)
+            print(f"Time: {time.time() - start}")
             if self.selected_idx is not None:
                 logits = logits[self.selected_idx]
             else:
@@ -210,6 +225,7 @@ class EasyTPT(nn.Module):
         else:
             x = x.to(self.device).unsqueeze(0)
             logits = self.inference(x)
+            print(f"Time: {time.time() - start}")
         return logits
 
     def inference(self, x):
