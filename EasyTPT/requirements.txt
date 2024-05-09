@@ -1,0 +1,15 @@
+clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33
+datasets
+gdown
+huggingface-hub
+matplotlib
+numpy
+opencv-contrib-python
+opencv-python
+pandas
+pillow
+PyYAML
+scikit-image
+scikit-learn
+tqdm
+wandb
