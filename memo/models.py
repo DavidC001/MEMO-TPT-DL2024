@@ -16,6 +16,14 @@ from dataloaders.dataloader import get_classes_names, get_dataloaders
 from EasyTPT.utils import EasyAgumenter
 
 
+def memo_marginal_entropy(outputs):
+    logits = outputs - outputs.logsumexp(dim=-1, keepdim=True)
+    avg_logits = logits.logsumexp(dim=0) - np.log(logits.shape[0])
+    min_real = torch.finfo(avg_logits.dtype).min
+    avg_logits = torch.clamp(avg_logits, min=min_real)
+    return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
+
+
 def _modified_bn_forward(self, input):
     est_mean = torch.zeros(self.running_mean.shape, device=self.running_mean.device)
     est_var = torch.ones(self.running_var.shape, device=self.running_var.device)
@@ -26,7 +34,7 @@ def _modified_bn_forward(self, input):
 
 
 class EasyMemo(nn.Module):
-    def __init__(self, net, device, prior_strength=1, lr=0.005, weight_decay=0.0001, opt='sgd'):
+    def __init__(self, net, device, prior_strength=1, lr=0.005, weight_decay=0.0001, opt='sgd', niter=1):
         super(EasyMemo, self).__init__()
 
         self.device = device
@@ -35,6 +43,8 @@ class EasyMemo(nn.Module):
         self.optimizer = self.memo_optimizer_model(lr=lr, weight_decay=weight_decay, opt=opt)
         self.names = get_classes_names()
         self.memo_modify_bn_pass()
+        self.criterion = memo_marginal_entropy
+        self.niter = niter
 
     def forward(self, x):
         if isinstance(x, list):
@@ -54,7 +64,8 @@ class EasyMemo(nn.Module):
 
     def inference(self, x):
         self.net.eval()
-        outputs = self.net(x)
+        with torch.no_grad():
+            outputs = self.net(x)
         return outputs
 
     def memo_modify_bn_pass(self):
@@ -67,6 +78,25 @@ class EasyMemo(nn.Module):
         if opt == 'adamw':
             optimizer = optim.AdamW(self.net.parameters(), lr=lr, weight_decay=weight_decay)
         return optimizer
+
+    def memo_adapt_single(self, inputs, niter):
+        self.net.eval()
+        assert niter > 0 and isinstance(niter, int), 'niter must be a positive integer'
+        for iteration in range(niter):
+            self.optimizer.zero_grad()
+            outputs = self.net(inputs)
+            loss = self.criterion(outputs)
+            loss.backward()
+            self.optimizer.step()
+
+    def memo_test_single(self, image, label):
+        with torch.no_grad():
+            outputs = self.net(image.to(device=self.device))
+            _, predicted = outputs.max(1)
+            # print( "Predicted: ", names[predicted.item()], " Label: ", names[label])
+            confidence = nn.functional.softmax(outputs, dim=1).squeeze()[predicted].item()
+        correctness = 1 if predicted.item() == label else 0
+        return correctness, confidence
 
 
 def memo_get_datasets(augmix: True, augs=64):
