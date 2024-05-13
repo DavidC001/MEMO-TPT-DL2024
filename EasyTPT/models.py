@@ -203,29 +203,25 @@ class EasyTPT(nn.Module):
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
-        breakpoint()
+        #breakpoint()
 
-    def forward(self, x):
+    def forward(self, x, top=0.10):
         """
         If x is a list of augmentations, run the confidence selection,
         otherwise just run the inference
         """
         self.eval()
-        import time
-        start = time.time()
 
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
             logits = self.inference(x)
-            print(f"Time: {time.time() - start}")
             if self.selected_idx is not None:
                 logits = logits[self.selected_idx]
             else:
-                logits, self.selected_idx = self.select_confident_samples(logits, 0.10)
+                logits, self.selected_idx = self.select_confident_samples(logits, top)
         else:
             x = x.to(self.device).unsqueeze(0)
             logits = self.inference(x)
-            print(f"Time: {time.time() - start}")
         return logits
 
     def inference(self, x):
