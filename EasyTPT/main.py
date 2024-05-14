@@ -36,7 +36,7 @@ def tpt_clip_eval(model, img_prep):
 
 
 def tpt_avg_entropy(outputs):
-    breakpoint()
+
     logits = outputs - outputs.logsumexp(
         dim=-1, keepdim=True
     )  # logits = outputs.log_softmax(dim=1) [N, 1000]
