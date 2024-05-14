@@ -54,7 +54,7 @@ class EasyMemo(nn.Module):
 
         self.device = device
         self.prior_strength = prior_strength
-        self.net = net
+        self.net = net.to(device)
         self.optimizer = self.memo_optimizer_model(lr=lr, weight_decay=weight_decay, opt=opt)
         self.lr = lr
         self.weight_decay = weight_decay
@@ -80,15 +80,17 @@ class EasyMemo(nn.Module):
         self.top = top
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
-            print(f"Shape forward: {x.shape}")
+            # print(f"Shape forward: {x.shape}")
             logits = self.inference(x)
             logits, self.confidence_idx = self.topk_selection(logits)
         else:
             if len(x.shape) == 3:
                 x = x.unsqueeze(0)
-                torch.unsqueeze()
             x = x.to(self.device)
             logits = self.inference(x)
+
+        # print(f"[EasyMemo] input shape: {x.shape}")
+        # print(f"[EasyMemo] logits shape: {logits.shape}")
         return logits
 
     def inference(self, x):
@@ -103,12 +105,12 @@ class EasyMemo(nn.Module):
         self.net.eval()
         outputs = self.net(x)
 
-        out_app = torch.zeros(outputs.shape[0], len(self.classes_mask))
+        out_app = torch.zeros(outputs.shape[0], len(self.classes_mask)).to(self.device)
         for i, out in enumerate(outputs):
             out_app[i] = out[self.classes_mask]
         return out_app
 
-    def predict(self, x):
+    def predict(self, x, niter=1):
         """
         Predicts the class of the input x, which is an image
         Args:
@@ -117,6 +119,7 @@ class EasyMemo(nn.Module):
         Returns: The predicted classes
 
         """
+        self.niter = niter        
         self.net.eval()
         for iteration in range(self.niter):
             self.optimizer.zero_grad()
@@ -128,7 +131,10 @@ class EasyMemo(nn.Module):
 
         with torch.no_grad():
             outputs = self.net(x[0].unsqueeze(0).to(self.device))
-            predicted = outputs.argmax(1).item()
+            outs = torch.zeros(outputs.shape[0], len(self.classes_mask)).to(self.device)
+            for i, out in enumerate(outputs):
+                outs[i] = out[self.classes_mask]
+            predicted = outs.argmax(1).item()
 
         return predicted
 
