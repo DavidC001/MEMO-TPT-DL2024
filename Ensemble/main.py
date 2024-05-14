@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append(".")
 
 import torch
@@ -84,8 +85,8 @@ def entropy(logits):
 
 def loss(TPT_outs, memo_outs):
     # calculate the average distribution of the logits, then use entropy to calculate the loss
-    
-    #bring the outputs to the same device
+
+    # bring the outputs to the same device
     TPT_outs = TPT_outs.to(memo_outs.device)
 
     #average TPT outputs
@@ -140,6 +141,7 @@ def printOutput(output, top=5, pre=""):
         _, indices = torch.topk(output[i], top)
         for idx in indices:
             print(f"{pre}\tcLass {idx.item()}: {classnames[idx.item()]}, confidence: {output[i][idx].item()}")
+
 
 def test(tpt_model:EasyTPT, memo_model, tpt_data, memo_data, device, niter=1):
     classnames = get_classes_names()
@@ -255,6 +257,7 @@ def main():
     test(tpt_model, memo_model, tpt_dataA, memo_dataA, device)
     print("\nTesting on ImageNet-V2")
     test(tpt_model, memo_model, tpt_dataV2, memo_dataV2, device)
+
 
 if __name__ == "__main__":
     main()

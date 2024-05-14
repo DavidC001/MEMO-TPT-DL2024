@@ -193,7 +193,6 @@ class EasyTPT(nn.Module):
             device, clip, base_prompt, splt_ctx, classnames
         )
 
-
         # create optimizer and save the state
         trainable_param = []
         for name, param in self.named_parameters():
@@ -203,29 +202,27 @@ class EasyTPT(nn.Module):
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
-        breakpoint()
+        # breakpoint()
 
-    def forward(self, x):
+    def forward(self, x, top=0.10):
         """
         If x is a list of augmentations, run the confidence selection,
         otherwise just run the inference
         """
         self.eval()
-        import time
-        start = time.time()
-
+        # breakpoint()
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
             logits = self.inference(x)
-            print(f"Time: {time.time() - start}")
             if self.selected_idx is not None:
                 logits = logits[self.selected_idx]
             else:
-                logits, self.selected_idx = self.select_confident_samples(logits, 0.10)
+                logits, self.selected_idx = self.select_confident_samples(logits, top)
         else:
-            x = x.to(self.device).unsqueeze(0)
+            if len(x.shape) == 3:
+                x = x.unsqueeze(0)
+            x = x.to(self.device)
             logits = self.inference(x)
-            print(f"Time: {time.time() - start}")
         return logits
 
     def inference(self, x):
@@ -287,7 +284,7 @@ class EasyTPT(nn.Module):
         ]
         return logits[idx], idx
 
-    def avg_entropy(self, outputs):
+    def tpt_avg_entropy(self, outputs):
         logits = outputs - outputs.logsumexp(
             dim=-1, keepdim=True
         )  # logits = outputs.log_softmax(dim=1) [N, 1000]
@@ -304,7 +301,7 @@ class EasyTPT(nn.Module):
 
         for _ in range(ttt_steps):
             out = self(images)
-            loss = self.avg_entropy(out)
+            loss = self.tpt_avg_entropy(out)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()

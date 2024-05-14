@@ -11,7 +11,7 @@ from clip import tokenize
 
 from dataloaders.imageNetA import ImageNetA
 
-from EasyTPT.utils import get_transforms, get_datasets
+from EasyTPT.utils import tpt_get_transforms, tpt_get_datasets
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_args
 from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
@@ -20,7 +20,7 @@ from EasyTPT.tpt_classnames.imagenet_variants import imagenet_a_mask
 torch.autograd.set_detect_anomaly(True)
 
 
-def clip_eval(model, img_prep):
+def tpt_clip_eval(model, img_prep):
     tkn_prompts = tokenize(model.prompt_learner.txt_prompts)
 
     with torch.no_grad():
@@ -35,7 +35,8 @@ def clip_eval(model, img_prep):
     return clip_id
 
 
-def avg_entropy(outputs):
+def tpt_avg_entropy(outputs):
+    breakpoint()
     logits = outputs - outputs.logsumexp(
         dim=-1, keepdim=True
     )  # logits = outputs.log_softmax(dim=1) [N, 1000]
@@ -72,7 +73,7 @@ def main():
         imv2_names,
         imv2_custom_names,
         imv2_label_mapping,
-    ) = get_datasets(data_root, augmix=AUGMIX, augs=AUGS, all_classes=False)
+    ) = tpt_get_datasets(data_root, augmix=AUGMIX, augs=AUGS, all_classes=False)
 
     print("number of test samples: {}".format(len(imageNet_A)))
 
@@ -113,7 +114,7 @@ def main():
         for _ in range(TTT_STEPS):
 
             out = tpt(imgs)
-            loss = avg_entropy(out)
+            loss = tpt_avg_entropy(out)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -135,7 +136,7 @@ def main():
 
         ################ CLIP ############################
         if EVAL_CLIP:
-            clip_id = clip_eval(tpt, imgs)
+            clip_id = tpt_clip_eval(tpt, imgs)
             clip_predicted = classnames[clip_id]
             if id_mapping[clip_id] == label:
                 clip_correct += 1
