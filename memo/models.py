@@ -100,6 +100,7 @@ class EasyMemo(nn.Module):
         return predicted
 
     def reset(self):
+        del self.optimizer
         self.optimizer = self.memo_optimizer_model(lr=self.lr, weight_decay=self.weight_decay, opt=self.opt)
         self.confidence_idx = None
         self.net.load_state_dict(deepcopy(self.initial_state))
@@ -193,12 +194,12 @@ if __name__ == "__main__":
                     prior_strength=0.94, top=0.5)
     correct = []
     for i in range(len(imageNet_A)):
-        net2 = deepcopy(memo.net)
         data = imageNet_A[i]
         image = data["img"]
         label = int(data["label"])
         logit = memo.forward(image)
         predict = memo.predict(image)
         print(logit.shape, predict)
+        memo.reset()
         exit(0)
     print("Accuracy: ", sum(correct) / len(correct))
