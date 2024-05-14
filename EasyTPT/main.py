@@ -61,6 +61,7 @@ def main():
     TTT_STEPS = args["tts"]
     AUGMIX = args["augmix"]
     EVAL_CLIP = args["clip"]
+    EMB_ALIGN = args["emb_align"]
 
     data_root = "datasets"
 
@@ -91,6 +92,8 @@ def main():
         ttt_steps=TTT_STEPS,
         augs=AUGS,
         lr=LR,
+        # emb_align=EMB_ALIGN,
+        emb_align=False,
     )
 
     tpt_correct = 0
@@ -98,6 +101,9 @@ def main():
     cnt = 0
 
     idxs = [i for i in range(len(imageNet_A))]
+
+    seed = 0
+    np.random.seed(seed)
     np.random.shuffle(idxs)
     # for i, data in enumerate(imageNet_A):
     for i in idxs:

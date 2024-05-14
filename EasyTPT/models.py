@@ -164,6 +164,7 @@ class EasyTPT(nn.Module):
         ttt_steps=1,
         augs=64,
         lr=0.005,
+        emb_align=True,
     ):
         super(EasyTPT, self).__init__()
         self.device = device
@@ -177,12 +178,16 @@ class EasyTPT(nn.Module):
         self.augs = augs
         self.selected_idx = None
 
+        self.emb_align = emb_align
         # Load clip
-        clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
+        clip, self.preprocess = load(
+            arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
+        )
+        clip.float()
         self.clip = clip
         self.dtype = clip.dtype
         self.image_encoder = clip.encode_image
-        self.text_encoder = clip.encode_text
+        # self.text_encoder = clip.encode_text
 
         # freeze the parameters
         for name, param in self.named_parameters():
@@ -197,12 +202,26 @@ class EasyTPT(nn.Module):
         trainable_param = []
         for name, param in self.named_parameters():
             if param.requires_grad:
-                print(f"[EasyTPT] Training parameter: {name}")
+                # print(f"[EasyTPT] Training parameter: {name}")
                 trainable_param.append(param)
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
-        # breakpoint()
+        if emb_align:
+
+            emb_trainable_param = []
+            # unfreeze the image encoder
+            for name, param in self.clip.visual.named_parameters():
+                param.requires_grad_(True)
+                emb_trainable_param.append(param)
+
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.00001)
+            self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
+            self.clip_init_state = deepcopy(self.clip.visual.state_dict())
+
+        for name, param in self.named_parameters():
+            if param.requires_grad:
+                print(f"[EasyTPT] Training parameter: {name}")
 
     def forward(self, x, top=0.10):
         """
@@ -213,6 +232,10 @@ class EasyTPT(nn.Module):
         # breakpoint()
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
+
+            if self.emb_align:
+                self.align_embeddings(x)
+
             logits = self.inference(x)
             if self.selected_idx is not None:
                 logits = logits[self.selected_idx]
@@ -226,6 +249,7 @@ class EasyTPT(nn.Module):
         return logits
 
     def inference(self, x):
+
         with torch.no_grad():
             image_feat = self.image_encoder(x)
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
@@ -239,6 +263,31 @@ class EasyTPT(nn.Module):
         logits = logit_scale * image_feat @ txt_features.t()
 
         return logits
+
+    def align_emb_loss(self, image_feat):
+        norm_feat = torch.nn.functional.normalize(image_feat, p=2, dim=1)
+
+        cos_sim = torch.mm(norm_feat, norm_feat.T)
+
+        loss = 1 - cos_sim.mean()
+
+        return loss
+
+    def align_embeddings(self, x):
+        """
+        Aligns the embeddings of the image encoder
+        """
+        iters = 1
+        self.clip.visual.train()
+        for _ in range(iters):
+            image_feat = self.clip.visual(x.type(self.dtype))
+            loss = self.align_emb_loss(image_feat)
+            self.emb_optimizer.zero_grad()
+            loss.backward()
+            # torch.nn.utils.clip_grad_norm_(self.clip.visual.parameters(), max_norm=1)
+            self.emb_optimizer.step()
+            # print(f"alignining... : {loss.item()}")
+        self.clip.visual.eval()
 
     def custom_encoder(self, prompts, tokenized_prompts):
         """
@@ -267,6 +316,11 @@ class EasyTPT(nn.Module):
         self.optimizer.load_state_dict(deepcopy(self.optim_state))
         self.prompt_learner.reset()
         self.selected_idx = None
+
+        if self.emb_align:
+            # print("[EasyTPT] Resetting embeddings optimizer")
+            self.emb_optimizer.load_state_dict(deepcopy(self.emb_optim_state))
+            self.clip.visual.load_state_dict(deepcopy(self.clip_init_state))
 
     def select_confident_samples(self, logits, top):
         """
@@ -310,7 +364,8 @@ class EasyTPT(nn.Module):
             out_id = out.argmax(1).item()
             prediction = self.prompt_learner.classnames[out_id]
 
-        return out_id, prediction
+        # return out_id, prediction
+        return out_id
 
     def get_optimizer(self):
         """
