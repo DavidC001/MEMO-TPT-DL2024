@@ -67,15 +67,17 @@ class EasyMemo(nn.Module):
         self.initial_state = deepcopy(self.net.state_dict())
         self.classes_mask = classes_mask
 
-    def forward(self, x):
+    def forward(self, x, top=0.1):
         """
         Forward pass where we check which type of input we have and we call the inference on the input image Tensor
         Args:
+            top: How many samples to select from the batch
             x: A Tensor of shape (N, C, H, W) or a list of Tensors of shape (N, C, H, W)
 
         Returns: The logits after the inference pass
 
         """
+        self.top = top
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
             print(f"Shape forward: {x.shape}")
