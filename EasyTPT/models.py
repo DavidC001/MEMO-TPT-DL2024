@@ -310,7 +310,8 @@ class EasyTPT(nn.Module):
             out_id = out.argmax(1).item()
             prediction = self.prompt_learner.classnames[out_id]
 
-        return out_id, prediction
+        # return out_id, prediction
+        return out_id
 
     def get_optimizer(self):
         """
