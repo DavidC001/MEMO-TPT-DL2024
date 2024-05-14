@@ -68,11 +68,12 @@ def get_args():
     )
 
     parser.add_argument(
-        "-E",
-        "--emb_align",
-        action="store_true",
-        help="Use image embedding alignment or not",
-        default=False,
+        "-as",
+        "--align_steps",
+        type=int,
+        help="Number of alignment steps",
+        default=0,
+        metavar="",
     )
 
     args = vars(parser.parse_args())

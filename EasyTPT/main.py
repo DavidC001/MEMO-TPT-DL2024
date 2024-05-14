@@ -5,6 +5,7 @@ sys.path.append(".")
 
 import torch
 import numpy as np
+import random
 
 from pprint import pprint
 from clip import tokenize
@@ -61,7 +62,7 @@ def main():
     TTT_STEPS = args["tts"]
     AUGMIX = args["augmix"]
     EVAL_CLIP = args["clip"]
-    EMB_ALIGN = args["emb_align"]
+    ALIGN_STEPS = args["align_steps"]
 
     data_root = "datasets"
 
@@ -92,8 +93,8 @@ def main():
         ttt_steps=TTT_STEPS,
         augs=AUGS,
         lr=LR,
-        # emb_align=EMB_ALIGN,
-        emb_align=False,
+        align_steps=ALIGN_STEPS,
+        # align_steps=2,
     )
 
     tpt_correct = 0
@@ -102,8 +103,10 @@ def main():
 
     idxs = [i for i in range(len(imageNet_A))]
 
-    seed = 0
-    np.random.seed(seed)
+    SEED = 1
+    torch.manual_seed(SEED)
+    random.seed(SEED)
+    np.random.seed(SEED)
     np.random.shuffle(idxs)
     # for i, data in enumerate(imageNet_A):
     for i in idxs:

@@ -164,7 +164,7 @@ class EasyTPT(nn.Module):
         ttt_steps=1,
         augs=64,
         lr=0.005,
-        emb_align=True,
+        align_steps=0,
     ):
         super(EasyTPT, self).__init__()
         self.device = device
@@ -178,7 +178,7 @@ class EasyTPT(nn.Module):
         self.augs = augs
         self.selected_idx = None
 
-        self.emb_align = emb_align
+        self.align_steps = align_steps
         # Load clip
         clip, self.preprocess = load(
             arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
@@ -207,7 +207,7 @@ class EasyTPT(nn.Module):
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
-        if emb_align:
+        if align_steps > 0:
 
             emb_trainable_param = []
             # unfreeze the image encoder
@@ -215,7 +215,7 @@ class EasyTPT(nn.Module):
                 param.requires_grad_(True)
                 emb_trainable_param.append(param)
 
-            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.00001)
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.001)
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
@@ -233,18 +233,19 @@ class EasyTPT(nn.Module):
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
 
-            if self.emb_align:
-                self.align_embeddings(x)
-
             logits = self.inference(x)
             if self.selected_idx is not None:
                 logits = logits[self.selected_idx]
             else:
                 logits, self.selected_idx = self.select_confident_samples(logits, top)
+                if self.align_steps > 0:
+                    self.align_embeddings(x)
         else:
+
             if len(x.shape) == 3:
                 x = x.unsqueeze(0)
             x = x.to(self.device)
+
             logits = self.inference(x)
         return logits
 
@@ -265,11 +266,15 @@ class EasyTPT(nn.Module):
         return logits
 
     def align_emb_loss(self, image_feat):
+
         norm_feat = torch.nn.functional.normalize(image_feat, p=2, dim=1)
 
         cos_sim = torch.mm(norm_feat, norm_feat.T)
 
-        loss = 1 - cos_sim.mean()
+        noself_mean = (cos_sim.sum() - torch.trace(cos_sim)) / (
+            cos_sim.numel() - cos_sim.shape[0]
+        )
+        loss = -noself_mean
 
         return loss
 
@@ -277,10 +282,11 @@ class EasyTPT(nn.Module):
         """
         Aligns the embeddings of the image encoder
         """
-        iters = 1
         self.clip.visual.train()
-        for _ in range(iters):
-            image_feat = self.clip.visual(x.type(self.dtype))
+        selected_augs = torch.index_select(x, 0, self.selected_idx)
+        for _ in range(self.align_steps):
+            image_feat = self.clip.visual(selected_augs.type(self.dtype))
+            # image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
             loss = self.align_emb_loss(image_feat)
             self.emb_optimizer.zero_grad()
             loss.backward()
@@ -317,7 +323,7 @@ class EasyTPT(nn.Module):
         self.prompt_learner.reset()
         self.selected_idx = None
 
-        if self.emb_align:
+        if self.align_steps > 0:
             # print("[EasyTPT] Resetting embeddings optimizer")
             self.emb_optimizer.load_state_dict(deepcopy(self.emb_optim_state))
             self.clip.visual.load_state_dict(deepcopy(self.clip_init_state))
