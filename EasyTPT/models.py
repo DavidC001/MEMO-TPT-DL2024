@@ -223,6 +223,9 @@ class EasyTPT(nn.Module):
                 x = x.unsqueeze(0)
             x = x.to(self.device)
             logits = self.inference(x)
+        
+        # print (f"[EasyTPT] input shape: {x.shape}")
+        # print("[EasyTPT] logits shape: ", logits.shape)
         return logits
 
     def inference(self, x):
@@ -295,11 +298,11 @@ class EasyTPT(nn.Module):
         avg_logits = torch.clamp(avg_logits, min=min_real)
         return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
 
-    def predict(self, images, ttt_steps=4):
+    def predict(self, images, niter=1):
 
         self.reset()
 
-        for _ in range(ttt_steps):
+        for _ in range(niter):
             out = self(images)
             loss = self.tpt_avg_entropy(out)
             self.optimizer.zero_grad()
