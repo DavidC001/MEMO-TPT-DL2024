@@ -135,7 +135,7 @@ def main():
             # if True:
             #     out_id, tpt_predicted = tpt.predict(imgs, ttt_steps=TTT_STEPS)
             if id_mapping[out_id] == label:
-                print(":)")
+                print(":D")
                 tpt_correct += 1
             else:
                 print(":(")
