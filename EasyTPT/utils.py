@@ -76,7 +76,7 @@ class EasyAgumenter(object):
         return [image] + views
 
 
-def get_transforms(augs=64):
+def tpt_get_transforms(augs=64):
 
     base_transform = transforms.Compose(
         [
@@ -104,7 +104,7 @@ def get_transforms(augs=64):
     return data_transform
 
 
-def get_datasets(data_root, augmix=False, augs=64, all_classes=True):
+def tpt_get_datasets(data_root, augmix=False, augs=64, all_classes=True):
     """
     Returns the ImageNetA and ImageNetV2 datasets.
 
