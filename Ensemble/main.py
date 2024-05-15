@@ -70,6 +70,7 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
     cnt = 0
 
     class_names = get_classes_names()
+    models_names = ["TPT", "MEMO"]
 
     TPT_temp = 1.55
     MEMO_temp = 0.7
@@ -80,11 +81,11 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
     #shuffle the data
     indx = np.random.permutation(range(len(tpt_data)))
 
-    model = Ensemble([tpt_model, memo_model], temps, device, test_single_models=testSingleModels)
+    model = Ensemble(models=[tpt_model, memo_model], temps=temps, 
+                     device=device, test_single_models=testSingleModels)
 
     for i in indx:
-        cnt += 1
-        model.reset()  
+        cnt += 1  
 
         img_TPT = tpt_data[i]["img"]
         img_MEMO = memo_data[i]["img"]
@@ -105,18 +106,19 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
             for i, model_out in enumerate(models_out):
                 if label == model_out:
                     correctSingle[i] += 1
-                print(f"Single model accuracy {i}: {correct/cnt} - predicted: {class_names[model_out]} - tested: {cnt} / {len(tpt_data)}")
+                
+                print(f"\t{models_names[i]} model accuracy: {correctSingle[i]}/{cnt} - predicted class {model_out}: {class_names[model_out]} - tested: {cnt} / {len(tpt_data)}")
 
         if label == prediction:
             correct += 1
             
-        print(f"Ensemble accuracy: {correct/cnt} - predicted: {class_names[prediction]} - tested: {cnt} / {len(tpt_data)}")
+        print(f"\tEnsemble accuracy: {correct}/{cnt} - predicted class {prediction}: {class_names[prediction]} - tested: {cnt} / {len(tpt_data)}")
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     imageNetA = True
-    naug = 30
+    naug = 64
     top = 0.1
     niter = 1
 
@@ -127,6 +129,10 @@ def main():
     tpt_model, tpt_data, mapping = TPT("cuda", naug=naug, A=imageNetA)
     
     memo_model, memo_data = memo("cuda", naug=naug, A=imageNetA)
+    print(memo_model)
+    #add a dropout layer to the memo model
+    memo_model.net.layer4.add_module("dropout", torch.nn.Dropout(0.5))
+    print(memo_model)
 
     if (imageNetA):
         print("Testing on ImageNet-A")
