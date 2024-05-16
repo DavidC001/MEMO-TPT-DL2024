@@ -2,11 +2,8 @@ import os
 
 from PIL import Image
 import numpy as np
+import sys
 
-import torch
-import torchvision.transforms as transforms
-
-import datasets
 import torchvision.datasets as datasets
 from torchvision.transforms import InterpolationMode
 from torchvision import transforms
@@ -15,9 +12,10 @@ from typing import Any, Tuple
 
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
-from torchvision.transforms.v2 import AugMix
 
+sys.path.append(".")
 from EasyTPT.tpt_classnames.imagnet_prompts import imagenet_classes
+from dataloaders.easyAugmenter import EasyAgumenter
 
 
 class DatasetWrapper(datasets.ImageFolder):
@@ -40,29 +38,6 @@ class DatasetWrapper(datasets.ImageFolder):
 
         return sample, (target, path)
 
-
-class EasyAgumenter(object):
-    def __init__(self, base_transform, preprocess, augmix, n_views=63):
-        self.base_transform = base_transform
-        self.preprocess = preprocess
-        self.n_views = n_views
-
-        if augmix:
-
-            self.preaugment = transforms.Compose(
-                [
-                    AugMix(),
-                    transforms.Resize(224, interpolation=InterpolationMode.BICUBIC),
-                    transforms.CenterCrop(224),
-                ]
-            )
-        else:
-            self.preaugment = transforms.Compose(
-                [
-                    transforms.RandomResizedCrop(224),
-                    transforms.RandomHorizontalFlip(),
-                ]
-            )
 
     def __call__(self, x):
 
