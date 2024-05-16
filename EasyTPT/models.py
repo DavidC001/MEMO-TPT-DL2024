@@ -202,7 +202,7 @@ class EasyTPT(nn.Module):
         trainable_param = []
         for name, param in self.named_parameters():
             if param.requires_grad:
-                # print(f"[EasyTPT] Training parameter: {name}")
+                print(f"[EasyTPT TPT] Training parameter: {name}")
                 trainable_param.append(param)
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
@@ -212,16 +212,19 @@ class EasyTPT(nn.Module):
             emb_trainable_param = []
             # unfreeze the image encoder
             for name, param in self.clip.visual.named_parameters():
-                param.requires_grad_(True)
-                emb_trainable_param.append(param)
+                #if parameter is not attnpoll
+                if "attnpool" not in name:
+                    param.requires_grad_(True)
+                    emb_trainable_param.append(param)
+                    print(f"[EasyTPT Emb] Training parameter: {name}")
 
-            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.0001)
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.001)
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
-        for name, param in self.named_parameters():
-            if param.requires_grad:
-                print(f"[EasyTPT] Training parameter: {name}")
+        # for name, param in self.named_parameters():
+        #     if param.requires_grad:
+        #         print(f"[EasyTPT] Training parameter: {name}")
 
     def forward(self, x, top=0.10):
         """
