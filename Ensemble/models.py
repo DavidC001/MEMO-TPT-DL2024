@@ -12,7 +12,7 @@ class Ensemble(nn.Module):
         test_single_models (bool): Whether to test each individual model in addition to the ensemble.
         device (str): The device to be used for computation.
     """
-    def __init__(self, models, temps, device="cuda", test_single_models=False):
+    def __init__(self, models, temps, device="cuda", test_single_models=False, no_backwards=False):
         """
         Initializes an Ensemble object.
 
@@ -27,6 +27,7 @@ class Ensemble(nn.Module):
         self.temps = temps
         self.test_single_models = test_single_models
         self.device = device
+        self.backward = not no_backwards
 
     def entropy(self, logits):
         """
@@ -121,9 +122,14 @@ class Ensemble(nn.Module):
         models_pred = self.get_models_predictions(inputs)
 
         self.reset()
-        self.entropy_minimization(inputs, niter, top)
-        
-        with torch.no_grad():
+        if self.backward:
+            self.entropy_minimization(inputs, niter, top)
+            
+            with torch.no_grad():
+                outs = self.get_models_outs(inputs[:,0], top)
+                avg_logit = self.marginal_distribution(outs)
+                prediction = torch.argmax(avg_logit, dim=0)
+        else:
             outs = self.get_models_outs(inputs, top)
             avg_logit = self.marginal_distribution(outs)
             prediction = torch.argmax(avg_logit, dim=0)
