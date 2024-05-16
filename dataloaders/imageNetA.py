@@ -37,7 +37,7 @@ class ImageNetA(Dataset):
                 paths.append(os.path.join(root, classes, img).replace("\\", "/"))
                 # remove n and leading 0s
                 class_id = int(classes[1:])
-                labels.append(mapping[class_id]["id"])
+                labels.append(int(mapping[class_id]["id"]))
                 names.append(mapping[class_id]["name"])
                 self.classnames[mapping[class_id]["id"]] = mapping[class_id]["name"]
 

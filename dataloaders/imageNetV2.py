@@ -32,7 +32,7 @@ class ImageNetV2(Dataset):
         for classes in os.listdir(root):
             for img in os.listdir(os.path.join(root, classes)):
                 paths.append(os.path.join(root, classes, img).replace("\\", "/"))
-                labels.append(classes)
+                labels.append(int(classes))
                 names.append(mapping[classes])
                 self.classnames[classes] = mapping[classes]
 
