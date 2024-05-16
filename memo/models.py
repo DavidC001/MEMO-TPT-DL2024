@@ -232,7 +232,7 @@ class EasyMemo(nn.Module):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets(False,64, True)
+    imageNet_A, imageNet_V2 = memo_get_datasets('identity',64, True)
 
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)

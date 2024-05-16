@@ -125,7 +125,7 @@ def tpt_get_datasets(data_root, augmix=False, augs=64, all_classes=True):
     data_transform = EasyAgumenter(
         base_transform,
         preprocess,
-        augmix=augmix,
+        augmentation=("augmix" if augmix else "cut"),
         n_views=augs - 1,
     )
 
