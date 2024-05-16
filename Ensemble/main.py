@@ -50,7 +50,7 @@ from torchvision.models import resnet50, ResNet50_Weights
 
 def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
     # prepare MEMO
-    imageNet_A, imageNet_V2 = memo_get_datasets(augmix=False, augs=naug)
+    imageNet_A, imageNet_V2 = memo_get_datasets(augmentation='cut', augs=naug)
     dataset = imageNet_A if A else imageNet_V2
 
     mapping = list(dataset.classnames.keys())
@@ -58,7 +58,7 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
         mapping[i] = int(id)
     
     rn50 = resnet50(weights=ResNet50_Weights.DEFAULT)
-    memo = EasyMemo(rn50, classes_mask=mapping, device=device, prior_strength=prior_strength)
+    memo = EasyMemo(rn50, device=device, classes_mask=mapping, prior_strength=prior_strength)
     
     return memo, dataset
 
@@ -129,10 +129,6 @@ def main():
     tpt_model, tpt_data, mapping = TPT("cuda", naug=naug, A=imageNetA)
     
     memo_model, memo_data = memo("cuda", naug=naug, A=imageNetA)
-    print(memo_model)
-    #add a dropout layer to the memo model
-    memo_model.net.layer4.add_module("dropout", torch.nn.Dropout(0.5))
-    print(memo_model)
 
     if (imageNetA):
         print("Testing on ImageNet-A")

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 import torch.utils.data
 import torchvision.models as models
 import sys
@@ -9,8 +8,7 @@ import torch.optim as optim
 from copy import deepcopy
 
 sys.path.append('.')
-from dataloaders.dataloader import get_dataloaders
-from EasyTPT.utils import EasyAgumenter
+from memo.utils import memo_get_datasets
 
 
 def memo_marginal_entropy(outputs):
@@ -35,8 +33,8 @@ class EasyMemo(nn.Module):
     A class to wrap a neural network with the MEMO TTA method
     """
 
-    def __init__(self, net, device, classes_mask, prior_strength=1, lr=0.005, weight_decay=0.0001, opt='sgd', niter=1,
-                 top=0.1):
+    def __init__(self, net, device, classes_mask, prior_strength: float = 1.0, lr=0.005, weight_decay=0.0001, opt='sgd',
+                 niter=1, top=0.1, drop=False):
         """
         Initializes the EasyMemo model with various arguments
         Args:
@@ -52,6 +50,9 @@ class EasyMemo(nn.Module):
         """
         super(EasyMemo, self).__init__()
 
+        self.drop = drop
+        if self.drop:
+            net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
         self.device = device
         self.prior_strength = prior_strength
         self.net = net.to(device)
@@ -67,7 +68,7 @@ class EasyMemo(nn.Module):
         self.initial_state = deepcopy(self.net.state_dict())
         self.classes_mask = classes_mask
 
-    def forward(self, x, top=0.1):
+    def forward(self, x, top=-1):
         """
         Forward pass where we check which type of input we have and we call the inference on the input image Tensor
         Args:
@@ -77,7 +78,8 @@ class EasyMemo(nn.Module):
         Returns: The logits after the inference pass
 
         """
-        self.top = top
+        self.top = top if top > 0 else self.top
+        # print(f"Shape forward: {x.shape}")
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
             # print(f"Shape forward: {x.shape}")
@@ -114,13 +116,18 @@ class EasyMemo(nn.Module):
         """
         Predicts the class of the input x, which is an image
         Args:
+            niter: The number of iteration on which to run the memo pass
             x: Tensor of shape (N, C, H, W)
 
         Returns: The predicted classes
 
         """
-        self.niter = niter        
-        self.net.eval()
+        self.niter = niter
+        if self.drop:
+            self.net.train()
+        else:
+            self.net.eval()
+
         for iteration in range(self.niter):
             self.optimizer.zero_grad()
             outputs = self.forward(x)
@@ -215,44 +222,36 @@ class EasyMemo(nn.Module):
         selected_idx = torch.argsort(batch_entropy, descending=False)[: int(batch_entropy.size()[0] * self.top)]
         return logits[selected_idx], selected_idx
 
+    def dropout_train(self, x):
+        self.net.train()
+        outputs = self.forward(x)
+        outputs, _ = self.topk_selection(outputs)
 
-def memo_get_datasets(augmix=True, augs=64):
-    """
-    Returns the ImageNetA and ImageNetV2 datasets for the memo model
-    Args:
-        augmix (bool): Whether to use AugMix or not
-        augs (int): The number of augmentations to compute. Must be greater than 1
-
-    Returns: The ImageNetA and ImageNetV2 datasets for the memo model, with the Augmentations already applied
-
-    """
-    assert augs > 1, 'The number of augmentations must be greater than 1'
-    memo_transforms = transforms.Compose([transforms.Resize(256),
-                                          transforms.CenterCrop(224)])
-    preprocess = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-    transform = EasyAgumenter(memo_transforms, preprocess, augmix, augs - 1)
-    imageNet_A, imageNet_V2 = get_dataloaders('datasets', transform)
-    return imageNet_A, imageNet_V2
+        return outputs
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets(augmix=False, augs=2)
+    imageNet_A, imageNet_V2 = memo_get_datasets('identity',64, True)
 
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
-    memo = EasyMemo(models.resnet50(weights=models.ResNet50_Weights.DEFAULT).to(device), device, mapping_a,
-                    prior_strength=0.94, top=0.5)
+    net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    # print(net2)
+    # exit(0)
+
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1)
     correct = []
     for i in range(len(imageNet_A)):
         data = imageNet_A[i]
+        # print(data['img'].shape);
         image = data["img"]
         label = int(data["label"])
-        logit = memo.forward(image)
-        predict = memo.predict(image)
-        print(logit.shape, predict)
+        # logit = memo.forward(image)
+        # predict = memo.predict(image)
+        # print(logit.shape, predict)
+        # predict = memo.forward(image)
+        original = memo.forward(image)
+        dropout = memo.dropout_train(image)
         memo.reset()
-        exit(0)
-    print("Accuracy: ", sum(correct) / len(correct))
+        print(original.shape, dropout.shape)
+    # print("Accuracy: ", sum(correct) / len(correct))
