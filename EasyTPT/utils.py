@@ -39,18 +39,6 @@ class DatasetWrapper(datasets.ImageFolder):
         return sample, (target, path)
 
 
-    def __call__(self, x):
-
-        if isinstance(x, np.ndarray):
-            x = transforms.ToPILImage()(x)
-
-        image = self.preprocess(self.base_transform(x))
-
-        views = [self.preprocess(self.preaugment(x)) for _ in range(self.n_views)]
-
-        return [image] + views
-
-
 def tpt_get_transforms(augs=64):
 
     base_transform = transforms.Compose(
