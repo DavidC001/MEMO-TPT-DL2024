@@ -128,7 +128,7 @@ class Ensemble(nn.Module):
             self.entropy_minimization(inputs, niter, top)
             
             with torch.no_grad():
-                outs = self.get_models_outs(inputs[:,0], top)
+                outs = self.get_models_outs([i[0] for i in inputs], top)
                 avg_logit = self.marginal_distribution(outs)
                 prediction = torch.argmax(avg_logit, dim=0)
         else:
