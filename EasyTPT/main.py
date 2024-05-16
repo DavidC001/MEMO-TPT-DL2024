@@ -119,16 +119,15 @@ def main():
         with torch.no_grad():
             tpt.reset()
 
-        optimizer = EasyTPT.get_optimizer(tpt)
-
         if ALIGN_STEPS > 0:
             # print(f"Aligning embeddings for {ALIGN_STEPS} steps")
             tpt.align_embeddings(imgs)
             out = tpt.predict(imgs)
-            tpt_align_correct += (1 if id_mapping[out] == label else 0)
+            tpt_align_correct += 1 if id_mapping[out] == label else 0
             tpt_align_predicted = classnames[out]
-    
-        tpt.reset()
+
+        with torch.no_grad():
+            tpt.reset()
         out_id = tpt.predict(imgs)
         tpt_predicted = classnames[out_id]
 
@@ -136,7 +135,7 @@ def main():
             print(":D")
             tpt_correct += 1
         else:
-                print(":(")
+            print(":(")
         cnt += 1
 
         tpt_acc = tpt_correct / (cnt)
@@ -163,7 +162,7 @@ def main():
         if ALIGN_STEPS > 0:
             print(f"A-TPT: \t{tpt_align_predicted}")
         print(f"after {cnt} samples\n")
-    #breakpoint()
+    # breakpoint()
 
 
 if __name__ == "__main__":

@@ -212,13 +212,13 @@ class EasyTPT(nn.Module):
             emb_trainable_param = []
             # unfreeze the image encoder
             for name, param in self.clip.visual.named_parameters():
-                #if parameter is not attnpoll
+                # if parameter is not attnpoll
                 if "attnpool" not in name:
                     param.requires_grad_(True)
                     emb_trainable_param.append(param)
                     print(f"[EasyTPT Emb] Training parameter: {name}")
 
-            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.001)
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.0001)
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
@@ -375,7 +375,7 @@ class EasyTPT(nn.Module):
 
     def predict(self, images, ttt_steps=4):
 
-        self.reset()
+        # self.reset()
 
         for _ in range(ttt_steps):
             out = self(images)
