@@ -120,6 +120,10 @@ def main():
 
         optimizer = EasyTPT.get_optimizer(tpt)
 
+        if ALIGN_STEPS > 0:
+            print(f"Aligning embeddings for {ALIGN_STEPS} steps")
+            tpt.align_embeddings(imgs)
+
         for _ in range(TTT_STEPS):
 
             out = tpt(imgs)

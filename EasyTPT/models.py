@@ -215,7 +215,7 @@ class EasyTPT(nn.Module):
                 param.requires_grad_(True)
                 emb_trainable_param.append(param)
 
-            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.000001)
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.0001)
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
@@ -234,14 +234,11 @@ class EasyTPT(nn.Module):
             x = torch.stack(x).to(self.device)
 
             logits = self.inference(x)
-            if self.selected_idx is not None:
-                logits = logits[self.selected_idx]
-            else:
+            if self.selected_idx is None:
                 logits, self.selected_idx = self.select_confident_samples(logits, top)
-                if self.align_steps > 0:
-                    self.align_embeddings(x)
+            else:
+                logits = logits[self.selected_idx]
         else:
-
             if len(x.shape) == 3:
                 x = x.unsqueeze(0)
             x = x.to(self.device)
@@ -282,23 +279,21 @@ class EasyTPT(nn.Module):
         """
         Aligns the embeddings of the image encoder
         """
+
+        self.forward(x)
         self.clip.visual.train()
+        x = torch.stack(x).to(self.device)
         selected_augs = torch.index_select(x, 0, self.selected_idx)
         for _ in range(self.align_steps):
             image_feat = self.clip.visual(selected_augs.type(self.dtype))
-            image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
             loss = self.align_emb_loss(image_feat)
             self.emb_optimizer.zero_grad()
             loss.backward()
-            print("distance before: ", loss.item())
-            # torch.nn.utils.clip_grad_norm_(self.clip.visual.parameters(), max_norm=1)
+            # print("distance before: ", loss.item())
             self.emb_optimizer.step()
-            # print(f"alignining... : {loss.item()}")
-
         image_feat = self.clip.visual(selected_augs.type(self.dtype))
-        image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
         loss = self.align_emb_loss(image_feat)
-        print("distance after: ", loss.item())
+        # print("distance after: ", loss.item())
         self.clip.visual.eval()
 
     def custom_encoder(self, prompts, tokenized_prompts):
