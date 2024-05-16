@@ -58,7 +58,7 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
         mapping[i] = int(id)
     
     rn50 = resnet50(weights=ResNet50_Weights.DEFAULT)
-    memo = EasyMemo(rn50, classes_mask=mapping, device=device, prior_strength=prior_strength)
+    memo = EasyMemo(rn50, device=device, classes_mask=mapping, prior_strength=prior_strength)
     
     return memo, dataset
 
