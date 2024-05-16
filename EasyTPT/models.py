@@ -1,7 +1,7 @@
 from copy import deepcopy
 import torch
 from torch import nn
-
+import torch.nn.functional as F
 import numpy as np
 
 
@@ -236,6 +236,8 @@ class EasyTPT(nn.Module):
             logits = self.inference(x)
             if self.selected_idx is None:
                 logits, self.selected_idx = self.select_confident_samples(logits, top)
+
+                # self.selected_idx = self.select_closest_samples(x, top)
             else:
                 logits = logits[self.selected_idx]
         else:
@@ -344,6 +346,18 @@ class EasyTPT(nn.Module):
             : int(batch_entropy.size()[0] * top)
         ]
         return logits[idx], idx
+
+    def select_closest_samples(self, x, top):
+
+        with torch.no_grad():
+            feat = self.clip.visual(x.type(self.dtype))
+            feat = feat / feat.norm(dim=-1, keepdim=True)
+
+            # Compute cosine similarities
+            sims = F.cosine_similarity(feat[0].unsqueeze(0), feat[1:], dim=1)
+            vals, idxs = torch.topk(sims, int(sims.shape[0] * top))
+
+        return idxs
 
     def tpt_avg_entropy(self, outputs):
         logits = outputs - outputs.logsumexp(
