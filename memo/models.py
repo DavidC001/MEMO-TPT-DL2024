@@ -10,14 +10,7 @@ from copy import deepcopy
 
 sys.path.append('.')
 from memo.utils import memo_get_datasets
-
-
-def memo_marginal_entropy(outputs):
-    logits = outputs - outputs.logsumexp(dim=-1, keepdim=True)
-    avg_logits = logits.logsumexp(dim=0) - np.log(logits.shape[0])
-    min_real = torch.finfo(avg_logits.dtype).min
-    avg_logits = torch.clamp(avg_logits, min=min_real)
-    return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
+from EasyModel import EasyModel
 
 
 def _modified_bn_forward(self, input):
@@ -29,7 +22,7 @@ def _modified_bn_forward(self, input):
     return nn.functional.batch_norm(input, running_mean, running_var, self.weight, self.bias, False, 0, self.eps)
 
 
-class EasyMemo(nn.Module):
+class EasyMemo(EasyModel):
     """
     A class to wrap a neural network with the MEMO TTA method
     """
@@ -55,13 +48,13 @@ class EasyMemo(nn.Module):
         self.device = device
         self.prior_strength = prior_strength
         self.net = net.to(device)
-        self.optimizer = self.memo_optimizer_model(lr=lr, weight_decay=weight_decay, opt=opt)
+        self.optimizer = self.get_optimizer(lr=lr, weight_decay=weight_decay, opt=opt)
         self.lr = lr
         self.weight_decay = weight_decay
         self.opt = opt
         self.confidence_idx = None
         self.memo_modify_bn_pass()
-        self.criterion = memo_marginal_entropy
+        self.criterion = self.avg_entropy
         self.niter = niter
         self.top = top
         self.initial_state = deepcopy(self.net.state_dict())
@@ -83,7 +76,7 @@ class EasyMemo(nn.Module):
             x = torch.stack(x).to(self.device)
             # print(f"Shape forward: {x.shape}")
             logits = self.inference(x)
-            logits, self.confidence_idx = self.topk_selection(logits)
+            logits, self.confidence_idx = self.select_confident_samples(logits, self.top)
         else:
             if len(x.shape) == 3:
                 x = x.unsqueeze(0)
@@ -127,13 +120,13 @@ class EasyMemo(nn.Module):
         self.niter = niter
         if self.drop:
             self.net.train()
-            predicted = self.memo_dropout(x)
+            predicted = self.predict_dropout(x)
         else:
             self.net.eval()
             for iteration in range(self.niter):
                 self.optimizer.zero_grad()
                 outputs = self.forward(x)
-                outputs, _ = self.topk_selection(outputs)
+                outputs, _ = self.select_confident_samples(outputs, self.top)
                 loss = self.criterion(outputs)
                 loss.backward()
                 self.optimizer.step()
@@ -150,7 +143,7 @@ class EasyMemo(nn.Module):
     def reset(self):
         """Resets the model to its initial state"""
         del self.optimizer
-        self.optimizer = self.memo_optimizer_model(lr=self.lr, weight_decay=self.weight_decay, opt=self.opt)
+        self.optimizer = self.get_optimizer(lr=self.lr, weight_decay=self.weight_decay, opt=self.opt)
         self.confidence_idx = None
         self.net.load_state_dict(deepcopy(self.initial_state))
 
@@ -159,7 +152,7 @@ class EasyMemo(nn.Module):
         nn.BatchNorm2d.prior = self.prior_strength
         nn.BatchNorm2d.forward = _modified_bn_forward
 
-    def memo_optimizer_model(self, lr=0.005, weight_decay=0.0001, opt='sgd'):
+    def get_optimizer(self, lr=0.005, weight_decay=0.0001, opt='sgd'):
         """
         Initializes the optimizer for the memo model
         Args:
@@ -178,20 +171,7 @@ class EasyMemo(nn.Module):
             raise ValueError('Invalid optimizer selected')
         return optimizer
 
-    def topk_selection(self, logits):
-        """
-        Selects the top k logits based on the batch entropy
-        Args:
-            logits: A tensor of shape (N, C)
-
-        Returns: The filtered logits and the indices of the selected logits
-
-        """
-        batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
-        selected_idx = torch.argsort(batch_entropy, descending=False)[: int(batch_entropy.size()[0] * self.top)]
-        return logits[selected_idx], selected_idx
-
-    def memo_dropout(self, x):
+    def predict_dropout(self, x):
         with torch.no_grad():
             outputs = self.forward(x)
             prediction = outputs.sum(0).argmax().item()
@@ -201,7 +181,7 @@ class EasyMemo(nn.Module):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets('cut', 8)
+    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 

@@ -7,6 +7,10 @@ import numpy as np
 
 from clip import load, tokenize
 
+import sys
+sys.path.append(".")
+from EasyModel import EasyModel
+
 
 class EasyPromptLearner(nn.Module):
     def __init__(
@@ -153,7 +157,7 @@ class EasyPromptLearner(nn.Module):
             self.ctx.data.copy_(self.ctx_init_state)  # to be optimized
 
 
-class EasyTPT(nn.Module):
+class EasyTPT(EasyModel):
     def __init__(
         self,
         device,
@@ -337,22 +341,6 @@ class EasyTPT(nn.Module):
             self.emb_optimizer.load_state_dict(deepcopy(self.emb_optim_state))
             self.clip.visual.load_state_dict(deepcopy(self.clip_init_state))
 
-    def select_confident_samples(self, logits, top):
-        """
-        Performs confidence selection, will return the indexes of the
-        augmentations with the highest confidence as well as the filtered
-        logits
-
-        Parameters:
-        - logits (torch.Tensor): the logits of the model [NAUGS, NCLASSES]
-        - top (float): the percentage of top augmentations to use
-        """
-        batch_entropy = -(logits.softmax(1) * logits.log_softmax(1)).sum(1)
-        idx = torch.argsort(batch_entropy, descending=False)[
-            : int(batch_entropy.size()[0] * top)
-        ]
-        return logits[idx], idx
-
     def select_closest_samples(self, x, top):
 
         with torch.no_grad():
@@ -365,24 +353,16 @@ class EasyTPT(nn.Module):
 
         return idxs
 
-    def tpt_avg_entropy(self, outputs):
-        logits = outputs - outputs.logsumexp(
-            dim=-1, keepdim=True
-        )  # logits = outputs.log_softmax(dim=1) [N, 1000]
-        avg_logits = logits.logsumexp(dim=0) - np.log(
-            logits.shape[0]
-        )  # avg_logits = logits.mean(0) [1, 1000]
-        min_real = torch.finfo(avg_logits.dtype).min
-        avg_logits = torch.clamp(avg_logits, min=min_real)
-        return -(avg_logits * torch.exp(avg_logits)).sum(dim=-1)
-
     def predict(self, images, niter=1):
 
         # self.reset()
 
+        if self.align_steps > 0:
+            self.align_embeddings(images)
+
         for _ in range(niter):
             out = self(images)
-            loss = self.tpt_avg_entropy(out)
+            loss = self.avg_entropy(out)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
