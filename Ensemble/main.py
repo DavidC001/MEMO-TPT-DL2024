@@ -112,7 +112,7 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
             pred_no_back = int(mapping[pred_no_back])
             if label == pred_no_back:
                 correct_no_back += 1
-            print(f"\tSimple Ens accuracy (no back): {correct_no_back}/{cnt} - predicted class {pred_no_back}: {class_names[pred_no_back]} - tested: {cnt} / {len(tpt_data)}")
+            print(f"\tSimple Ens accuracy: {correct_no_back}/{cnt} - predicted class {pred_no_back}: {class_names[pred_no_back]} - tested: {cnt} / {len(tpt_data)}")
 
         if label == prediction:
             correct += 1
