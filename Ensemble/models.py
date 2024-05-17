@@ -135,9 +135,9 @@ class Ensemble(nn.Module):
             self.reset()
             outs = self.get_models_outs(inputs, top)
             avg_logit = self.marginal_distribution(outs)
-            prediction = torch.argmax(avg_logit, dim=0)
+            prediction_no_back = torch.argmax(avg_logit, dim=0)
 
-        return models_pred, prediction
+        return models_pred, prediction_no_back, prediction
 
     def reset(self):
         """
