@@ -5,6 +5,7 @@ import torchvision.models as models
 import sys
 import numpy as np
 import torch.optim as optim
+from tqdm import tqdm
 from copy import deepcopy
 
 sys.path.append('.')
@@ -51,8 +52,6 @@ class EasyMemo(nn.Module):
         super(EasyMemo, self).__init__()
 
         self.drop = drop
-        if self.drop:
-            net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
         self.device = device
         self.prior_strength = prior_strength
         self.net = net.to(device)
@@ -104,7 +103,10 @@ class EasyMemo(nn.Module):
         Returns: The logits for that Tensor image
 
         """
-        self.net.eval()
+        if self.drop:
+            self.net.train()
+        else:
+            self.net.eval()
         outputs = self.net(x)
 
         out_app = torch.zeros(outputs.shape[0], len(self.classes_mask)).to(self.device)
@@ -125,23 +127,23 @@ class EasyMemo(nn.Module):
         self.niter = niter
         if self.drop:
             self.net.train()
+            predicted = self.memo_dropout(x)
         else:
             self.net.eval()
+            for iteration in range(self.niter):
+                self.optimizer.zero_grad()
+                outputs = self.forward(x)
+                outputs, _ = self.topk_selection(outputs)
+                loss = self.criterion(outputs)
+                loss.backward()
+                self.optimizer.step()
 
-        for iteration in range(self.niter):
-            self.optimizer.zero_grad()
-            outputs = self.forward(x)
-            outputs, _ = self.topk_selection(outputs)
-            loss = self.criterion(outputs)
-            loss.backward()
-            self.optimizer.step()
-
-        with torch.no_grad():
-            outputs = self.net(x[0].unsqueeze(0).to(self.device))
-            outs = torch.zeros(outputs.shape[0], len(self.classes_mask)).to(self.device)
-            for i, out in enumerate(outputs):
-                outs[i] = out[self.classes_mask]
-            predicted = outs.argmax(1).item()
+            with torch.no_grad():
+                outputs = self.net(x[0].unsqueeze(0).to(self.device))
+                outs = torch.zeros(outputs.shape[0], len(self.classes_mask)).to(self.device)
+                for i, out in enumerate(outputs):
+                    outs[i] = out[self.classes_mask]
+                predicted = outs.argmax(1).item()
 
         return predicted
 
@@ -176,39 +178,6 @@ class EasyMemo(nn.Module):
             raise ValueError('Invalid optimizer selected')
         return optimizer
 
-    def memo_adapt_single(self, inputs):
-        """
-        A single step of memo adaptation
-        Args:
-            inputs: A tensor of shape (N, C, H, W)
-
-        """
-        self.net.eval()
-        assert self.niter > 0 and isinstance(self.niter, int), 'niter must be a positive integer'
-        for iteration in range(self.niter):
-            self.optimizer.zero_grad()
-            outputs = self.net(inputs)
-            loss = self.criterion(outputs)
-            loss.backward()
-            self.optimizer.step()
-
-    def memo_test_single(self, image, label):
-        """
-        Tests the model on a single image and returns the correctness and confidence
-        Args:
-            image: A tensor of shape (N, C, H, W)
-            label: The correct label for the test
-
-        Returns: The correctness and confidence of the prediction
-
-        """
-        with torch.no_grad():
-            outputs = self.net(image.to(device=self.device))
-            _, predicted = outputs.max(1)
-            confidence = nn.functional.softmax(outputs, dim=1).squeeze()[predicted].item()
-        correctness = 1 if predicted.item() == label else 0
-        return correctness, confidence
-
     def topk_selection(self, logits):
         """
         Selects the top k logits based on the batch entropy
@@ -222,36 +191,32 @@ class EasyMemo(nn.Module):
         selected_idx = torch.argsort(batch_entropy, descending=False)[: int(batch_entropy.size()[0] * self.top)]
         return logits[selected_idx], selected_idx
 
-    def dropout_train(self, x):
-        self.net.train()
-        outputs = self.forward(x)
-        outputs, _ = self.topk_selection(outputs)
+    def memo_dropout(self, x):
+        with torch.no_grad():
+            outputs = self.forward(x)
+            prediction = outputs.sum(0).argmax().item()
 
-        return outputs
+        return prediction
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets('identity',64, True)
-
+    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
-    # print(net2)
-    # exit(0)
 
-    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1)
+    net.layer4.add_module('3', nn.Dropout(0.5, inplace=True))
+
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1, drop=True)
+
     correct = []
-    for i in range(len(imageNet_A)):
+    index = np.random.permutation(range(len(imageNet_A)))
+    for i in tqdm(index):
         data = imageNet_A[i]
-        # print(data['img'].shape);
         image = data["img"]
         label = int(data["label"])
-        # logit = memo.forward(image)
-        # predict = memo.predict(image)
-        # print(logit.shape, predict)
-        # predict = memo.forward(image)
-        original = memo.forward(image)
-        dropout = memo.dropout_train(image)
+        dropout_prediction = memo.predict(image)
         memo.reset()
-        print(original.shape, dropout.shape)
+        correct.append(mapping_a[dropout_prediction] == label)
+        tqdm.write(f"Accuracy: {sum(correct) / len(correct):.2f}")
     # print("Accuracy: ", sum(correct) / len(correct))
