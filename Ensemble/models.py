@@ -29,7 +29,7 @@ class Ensemble(nn.Module):
         self.temps = temps
         self.test_single_models = test_single_models
         self.device = device
-        self.backward = not no_backwards
+        self.no_backwards = no_backwards
 
     def entropy(self, logits):
         """
@@ -124,19 +124,20 @@ class Ensemble(nn.Module):
         models_pred = self.get_models_predictions(inputs)
 
         self.reset()
-        if self.backward:
-            self.entropy_minimization(inputs, niter, top)
+        self.entropy_minimization(inputs, niter, top)
             
-            with torch.no_grad():
-                outs = self.get_models_outs([i[0] for i in inputs], top)
-                avg_logit = self.marginal_distribution(outs)
-                prediction = torch.argmax(avg_logit, dim=0)
-        else:
-            outs = self.get_models_outs(inputs, top)
+        with torch.no_grad():
+            outs = self.get_models_outs([i[0] for i in inputs], top)
             avg_logit = self.marginal_distribution(outs)
             prediction = torch.argmax(avg_logit, dim=0)
 
-        return models_pred, prediction
+        if self.no_backwards:
+            self.reset()
+            outs = self.get_models_outs(inputs, top)
+            avg_logit = self.marginal_distribution(outs)
+            prediction_no_back = torch.argmax(avg_logit, dim=0)
+
+        return models_pred, prediction_no_back, prediction
 
     def reset(self):
         """
