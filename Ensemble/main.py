@@ -2,6 +2,7 @@ import sys
 sys.path.append(".")
 
 import torch
+from torch import nn
 from torchvision import transforms
 from torch import optim
 from torchvision.transforms.v2 import AugMix
@@ -15,7 +16,7 @@ from EasyTPT.models import EasyTPT
 
 from Ensemble.models import Ensemble
 
-def TPT(device="cuda", naug=30, base_prompt="A bad photo of a [CLS].", arch="RN50", splt_ctx= True, A=True):
+def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0):
     # prepare TPT
     if not torch.cuda.is_available():
         print("Using CPU this is no bueno")
@@ -35,11 +36,12 @@ def TPT(device="cuda", naug=30, base_prompt="A bad photo of a [CLS].", arch="RN5
         mapping = imageNetV2Map
     
     tpt = EasyTPT(
-        base_prompt=base_prompt,
+        base_prompt="A bad photo of a [CLS]",
         arch=arch,
-        splt_ctx=splt_ctx,
         classnames=classnames,
-        device=device
+        device=device,
+        ttt_steps=ttt_steps,
+        align_steps=align_steps
     )
     
     return tpt, dataset, mapping
@@ -48,9 +50,9 @@ def TPT(device="cuda", naug=30, base_prompt="A bad photo of a [CLS].", arch="RN5
 from memo.models import memo_get_datasets, EasyMemo
 from torchvision.models import resnet50, ResNet50_Weights
 
-def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
+def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=1):
     # prepare MEMO
-    imageNet_A, imageNet_V2 = memo_get_datasets(augmentation='cut', augs=naug)
+    imageNet_A, imageNet_V2 = memo_get_datasets(augmentation=('cut' if drop==0 else 'identity'), augs=naug)
     dataset = imageNet_A if A else imageNet_V2
 
     mapping = list(dataset.classnames.keys())
@@ -58,13 +60,24 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
         mapping[i] = int(id)
     
     rn50 = resnet50(weights=ResNet50_Weights.DEFAULT)
-    memo = EasyMemo(rn50, device=device, classes_mask=mapping, prior_strength=prior_strength)
+    rn50.layer4.add_module('dropout', nn.Dropout(drop))
+
+    memo = EasyMemo(
+        rn50, 
+        device=device, 
+        classes_mask=mapping, 
+        prior_strength=prior_strength,
+        niter=ttt_steps,
+        drop=(drop>0)
+    )
     
     return memo, dataset
 
 
 
-def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cuda", niter=1, top=0.1, no_backwards=False, testSingleModels=False):
+def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, 
+         device="cuda", niter=1, top=0.1,
+         no_backwards=False, testSingleModels=False):
     correct = 0
     correct_no_back = 0
     correctSingle = [0, 0]
@@ -97,7 +110,7 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
 
         print (f"Testing on {i} - name: {name} - label: {label}")
 
-        models_out, pred_no_back, prediction = model(data, niter=niter, top=0.1)
+        models_out, pred_no_back, prediction = model(data, niter=niter, top=top)
         models_out = [int(mapping[model_out]) for model_out in models_out]
         prediction = int(mapping[prediction])
         
@@ -127,21 +140,32 @@ def main():
     top = 0.1
     niter = 1
     testSingleModels = False
-    no_backwards = False
+    no_backwards = True
 
     #set the seed
     torch.manual_seed(0)
     np.random.seed(0)
 
-    tpt_model, tpt_data, mapping = TPT("cuda", naug=naug, A=imageNetA)
+    #TPT
+    TPT_device = "cuda" if torch.cuda.is_available() else "cpu"
+    TPT_align_steps = 0
+    TPT_arch = "RN50"
+    TPT_iters = 1
+    tpt_model, tpt_data, mapping = TPT(device=TPT_device, naug=naug, arch=TPT_arch, A=imageNetA, ttt_steps=TPT_iters, align_steps=TPT_align_steps)
     
-    memo_model, memo_data = memo("cuda", naug=naug, A=imageNetA)
+    #MEMO
+    MEMO_device = "cuda" if torch.cuda.is_available() else "cpu"
+    MEMO_drop = 0
+    MEMO_prior_strength = 0.94
+    MEMO_iters = 1
+    memo_model, memo_data = memo(device=MEMO_device, naug=naug, A=imageNetA, ttt_steps=MEMO_iters, drop=MEMO_drop, prior_strength=MEMO_prior_strength)
 
     if (imageNetA):
         print("Testing on ImageNet-A")
     else:
         print("Testing on ImageNet-V2")
 
+    torch.autograd.set_detect_anomaly(True)
     test(tpt_model, memo_model, tpt_data, mapping, memo_data, device, niter, top, no_backwards, testSingleModels)
 
 if __name__ == "__main__":
