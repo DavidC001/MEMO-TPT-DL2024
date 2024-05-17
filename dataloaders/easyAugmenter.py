@@ -1,6 +1,7 @@
 import torchvision.transforms as transforms
 from torchvision.transforms.v2 import AugMix
 from torchvision.transforms import InterpolationMode
+import numpy as np
 
 
 class EasyAgumenter(object):
