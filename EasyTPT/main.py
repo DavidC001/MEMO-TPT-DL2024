@@ -91,7 +91,6 @@ def main():
         splt_ctx=SPLT_CTX,
         classnames=classnames,
         ttt_steps=TTT_STEPS,
-        augs=AUGS,
         lr=LR,
         align_steps=ALIGN_STEPS,
         # align_steps=2,

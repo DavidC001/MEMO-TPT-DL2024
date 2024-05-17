@@ -166,7 +166,6 @@ class EasyTPT(EasyModel):
         splt_ctx=False,
         classnames=None,
         ttt_steps=1,
-        augs=64,
         lr=0.005,
         align_steps=0,
     ):
@@ -179,7 +178,6 @@ class EasyTPT(EasyModel):
 
         self.base_prompt = base_prompt
         self.ttt_steps = ttt_steps
-        self.augs = augs
         self.selected_idx = None
 
         self.align_steps = align_steps
