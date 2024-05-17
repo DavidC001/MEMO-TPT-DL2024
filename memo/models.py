@@ -201,22 +201,28 @@ class EasyMemo(nn.Module):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
+    imageNet_A, imageNet_V2 = memo_get_datasets('cut', 8)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
-    net.layer4.add_module('3', nn.Dropout(0.5, inplace=True))
+    net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
 
-    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1, drop=True)
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
 
-    correct = []
+    np.random.seed(0)
+    torch.manual_seed(0)
+
+    correct = 0
+    cnt = 0
     index = np.random.permutation(range(len(imageNet_A)))
-    for i in tqdm(index):
+    iterate = tqdm(index)
+    for i in iterate:
         data = imageNet_A[i]
         image = data["img"]
         label = int(data["label"])
         dropout_prediction = memo.predict(image)
         memo.reset()
-        correct.append(mapping_a[dropout_prediction] == label)
-        tqdm.write(f"Accuracy: {sum(correct) / len(correct):.2f}")
+        correct+=mapping_a[dropout_prediction] == label
+        cnt+=1
+        iterate.set_description(desc=f"Current accuracy {correct / cnt:.2f}")
     # print("Accuracy: ", sum(correct) / len(correct))
