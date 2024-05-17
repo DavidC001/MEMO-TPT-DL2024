@@ -1,7 +1,7 @@
 from copy import deepcopy
 import torch
 from torch import nn
-
+import torch.nn.functional as F
 import numpy as np
 
 
@@ -164,6 +164,7 @@ class EasyTPT(nn.Module):
         ttt_steps=1,
         augs=64,
         lr=0.005,
+        align_steps=0,
     ):
         super(EasyTPT, self).__init__()
         self.device = device
@@ -177,12 +178,16 @@ class EasyTPT(nn.Module):
         self.augs = augs
         self.selected_idx = None
 
+        self.align_steps = align_steps
         # Load clip
-        clip, self.preprocess = load(arch, device=device, download_root=DOWNLOAD_ROOT)
+        clip, self.preprocess = load(
+            arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
+        )
+        clip.float()
         self.clip = clip
         self.dtype = clip.dtype
         self.image_encoder = clip.encode_image
-        self.text_encoder = clip.encode_text
+        # self.text_encoder = clip.encode_text
 
         # freeze the parameters
         for name, param in self.named_parameters():
@@ -197,12 +202,29 @@ class EasyTPT(nn.Module):
         trainable_param = []
         for name, param in self.named_parameters():
             if param.requires_grad:
-                print(f"[EasyTPT] Training parameter: {name}")
+                print(f"[EasyTPT TPT] Training parameter: {name}")
                 trainable_param.append(param)
         self.optimizer = torch.optim.AdamW(trainable_param, lr)
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
-        # breakpoint()
+        if align_steps > 0:
+
+            emb_trainable_param = []
+            # unfreeze the image encoder
+            for name, param in self.clip.visual.named_parameters():
+                # if parameter is not attnpoll
+                if "attnpool" not in name:
+                    param.requires_grad_(True)
+                    emb_trainable_param.append(param)
+                    print(f"[EasyTPT Emb] Training parameter: {name}")
+
+            self.emb_optimizer = torch.optim.AdamW(emb_trainable_param, 0.0001)
+            self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
+            self.clip_init_state = deepcopy(self.clip.visual.state_dict())
+
+        # for name, param in self.named_parameters():
+        #     if param.requires_grad:
+        #         print(f"[EasyTPT] Training parameter: {name}")
 
     def forward(self, x, top=0.10):
         """
@@ -213,15 +235,19 @@ class EasyTPT(nn.Module):
         # breakpoint()
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
+
             logits = self.inference(x)
-            if self.selected_idx is not None:
-                logits = logits[self.selected_idx]
-            else:
+            if self.selected_idx is None:
                 logits, self.selected_idx = self.select_confident_samples(logits, top)
+
+                # self.selected_idx = self.select_closest_samples(x, top)
+            else:
+                logits = logits[self.selected_idx]
         else:
             if len(x.shape) == 3:
                 x = x.unsqueeze(0)
             x = x.to(self.device)
+
             logits = self.inference(x)
         
         # print (f"[EasyTPT] input shape: {x.shape}")
@@ -229,6 +255,7 @@ class EasyTPT(nn.Module):
         return logits
 
     def inference(self, x):
+
         with torch.no_grad():
             image_feat = self.image_encoder(x)
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
@@ -242,6 +269,40 @@ class EasyTPT(nn.Module):
         logits = logit_scale * image_feat @ txt_features.t()
 
         return logits
+
+    def align_emb_loss(self, image_feat):
+
+        norm_feat = torch.nn.functional.normalize(image_feat, p=2, dim=1)
+
+        cos_sim = torch.mm(norm_feat, norm_feat.T)
+
+        # noself_mean = (cos_sim.sum() - torch.trace(cos_sim)) / (
+        #     cos_sim.numel() - cos_sim.shape[0]
+        # )
+        loss = 1 - cos_sim.mean()
+
+        return loss
+
+    def align_embeddings(self, x):
+        """
+        Aligns the embeddings of the image encoder
+        """
+
+        self.forward(x)
+        self.clip.visual.train()
+        x = torch.stack(x).to(self.device)
+        selected_augs = torch.index_select(x, 0, self.selected_idx)
+        for _ in range(self.align_steps):
+            image_feat = self.clip.visual(selected_augs.type(self.dtype))
+            loss = self.align_emb_loss(image_feat)
+            self.emb_optimizer.zero_grad()
+            loss.backward()
+            # print("distance before: ", loss.item())
+            self.emb_optimizer.step()
+        image_feat = self.clip.visual(selected_augs.type(self.dtype))
+        loss = self.align_emb_loss(image_feat)
+        # print("distance after: ", loss.item())
+        self.clip.visual.eval()
 
     def custom_encoder(self, prompts, tokenized_prompts):
         """
@@ -271,6 +332,11 @@ class EasyTPT(nn.Module):
         self.prompt_learner.reset()
         self.selected_idx = None
 
+        if self.align_steps > 0:
+            # print("[EasyTPT] Resetting embeddings optimizer")
+            self.emb_optimizer.load_state_dict(deepcopy(self.emb_optim_state))
+            self.clip.visual.load_state_dict(deepcopy(self.clip_init_state))
+
     def select_confident_samples(self, logits, top):
         """
         Performs confidence selection, will return the indexes of the
@@ -287,6 +353,18 @@ class EasyTPT(nn.Module):
         ]
         return logits[idx], idx
 
+    def select_closest_samples(self, x, top):
+
+        with torch.no_grad():
+            feat = self.clip.visual(x.type(self.dtype))
+            feat = feat / feat.norm(dim=-1, keepdim=True)
+
+            # Compute cosine similarities
+            sims = F.cosine_similarity(feat[0].unsqueeze(0), feat[1:], dim=1)
+            vals, idxs = torch.topk(sims, int(sims.shape[0] * top))
+
+        return idxs
+
     def tpt_avg_entropy(self, outputs):
         logits = outputs - outputs.logsumexp(
             dim=-1, keepdim=True
@@ -300,7 +378,7 @@ class EasyTPT(nn.Module):
 
     def predict(self, images, niter=1):
 
-        self.reset()
+        # self.reset()
 
         for _ in range(niter):
             out = self(images)

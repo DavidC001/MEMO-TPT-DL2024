@@ -5,6 +5,7 @@ sys.path.append(".")
 
 import torch
 import numpy as np
+import random
 
 from pprint import pprint
 from clip import tokenize
@@ -61,6 +62,7 @@ def main():
     TTT_STEPS = args["tts"]
     AUGMIX = args["augmix"]
     EVAL_CLIP = args["clip"]
+    ALIGN_STEPS = args["align_steps"]
 
     data_root = "datasets"
 
@@ -91,13 +93,21 @@ def main():
         ttt_steps=TTT_STEPS,
         augs=AUGS,
         lr=LR,
+        align_steps=ALIGN_STEPS,
+        # align_steps=2,
     )
 
     tpt_correct = 0
+    tpt_align_correct = 0
     clip_correct = 0
     cnt = 0
 
     idxs = [i for i in range(len(imageNet_A))]
+
+    SEED = 1
+    torch.manual_seed(SEED)
+    random.seed(SEED)
+    np.random.seed(SEED)
     np.random.shuffle(idxs)
     # for i, data in enumerate(imageNet_A):
     for i in idxs:
@@ -109,30 +119,27 @@ def main():
         with torch.no_grad():
             tpt.reset()
 
-        optimizer = EasyTPT.get_optimizer(tpt)
-
-        for _ in range(TTT_STEPS):
-
-            out = tpt(imgs)
-            loss = tpt_avg_entropy(out)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        if ALIGN_STEPS > 0:
+            # print(f"Aligning embeddings for {ALIGN_STEPS} steps")
+            tpt.align_embeddings(imgs)
+            out = tpt.predict(imgs)
+            tpt_align_correct += 1 if id_mapping[out] == label else 0
+            tpt_align_predicted = classnames[out]
 
         with torch.no_grad():
-            out = tpt(imgs[0])
-            out_id = out.argmax(1).item()
-            tpt_predicted = classnames[out_id]
-            # if True:
-            #     out_id, tpt_predicted = tpt.predict(imgs, ttt_steps=TTT_STEPS)
-            if id_mapping[out_id] == label:
-                print(":)")
-                tpt_correct += 1
-            else:
-                print(":(")
-            cnt += 1
+            tpt.reset()
+        out_id = tpt.predict(imgs)
+        tpt_predicted = classnames[out_id]
 
-            tpt_acc = tpt_correct / (cnt)
+        if id_mapping[out_id] == label:
+            print(":D")
+            tpt_correct += 1
+        else:
+            print(":(")
+        cnt += 1
+
+        tpt_acc = tpt_correct / (cnt)
+        tpt_align_acc = tpt_align_correct / (cnt)
 
         ################ CLIP ############################
         if EVAL_CLIP:
@@ -147,11 +154,15 @@ def main():
         print(f"TPT Accuracy: {round(tpt_acc,3)}")
         if EVAL_CLIP:
             print(f"CLIP Accuracy: {round(clip_acc,3)}")
+        if ALIGN_STEPS > 0:
+            print(f"Aligned TPT Accuracy: {round(tpt_align_acc,3)}")
         print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
         if EVAL_CLIP:
             print(f"CLIP: \t{clip_predicted}")
+        if ALIGN_STEPS > 0:
+            print(f"A-TPT: \t{tpt_align_predicted}")
         print(f"after {cnt} samples\n")
-    breakpoint()
+    # breakpoint()
 
 
 if __name__ == "__main__":

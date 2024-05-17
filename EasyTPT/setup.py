@@ -67,5 +67,14 @@ def get_args():
         default=False,
     )
 
+    parser.add_argument(
+        "-as",
+        "--align_steps",
+        type=int,
+        help="Number of alignment steps",
+        default=0,
+        metavar="",
+    )
+
     args = vars(parser.parse_args())
     return args
