@@ -1,15 +1,47 @@
 # MEMO-TPT-DL2024
 
 
-to implement:
-- function taking a model(always the same, maybe use global model), test image, lr and return final model for both TPT and Memo
-- function to get the list of distributions over labels given an image
-- function to backpropagate passing loss, returng the final model
-
-global fun:
-- dataset classes and get DataLoader
-
-
 ## TPT
 
-Read IMPLEMENTATION.md for an explanation of what's going on.
+Read EasyTPT/IMPLEMENTATION.md for an explanation of what's going on.
+
+## MEMO
+
+## Ensemble
+
+# Repository structure
+
+```
+MEMO-TPT-DL2024
+├───README.md
+├───.gitignore
+├───requirements.txt
+|
+├───EasyModel.py
+├───DL_AWS_project.ipynb
+|
+├───dataloaders
+│   ├───data_loader.py
+│   ├───easyAugmenter.py
+│   ├───imageNetA.py
+|   ├───imageNetV2.py
+│   └───wordNetIDs2Classes.csv
+│
+├───EasyTPT
+│   ├───IMPLEMENTATION.md
+│   ├───models.py
+│   ├───utils.py
+│   ├───setup.py
+│   ├───main.py
+│   └───...
+│
+├───MEMO
+│   ├───IMPLEMENTATION.md
+│   ├───models.py
+│   ├───utils.py
+│   └───...
+|
+└───Ensemble
+    ├───IMPLEMENTATION.md
+    └───...
+```
