@@ -6,7 +6,7 @@ import csv
 from dataloaders.imageNetA import ImageNetA
 from dataloaders.imageNetV2 import ImageNetV2
 
-def get_dataloaders(root, transform=None):
+def get_dataloaders(root, transform=None, csvMapFile="dataloaders/wordNetIDs2Classes.csv"):
     """
     Returns the dataloader of the dataset.
 
@@ -15,9 +15,9 @@ def get_dataloaders(root, transform=None):
         transform (callable, optional): A function/transform that takes in an image and returns a transformed version. Defaults to None.
     """
     root_A = os.path.join(root, "imagenet-a")
-    imageNet_A = ImageNetA(root_A, transform=transform)
+    imageNet_A = ImageNetA(root_A, transform=transform, csvMapFile=csvMapFile)
     root_V2 = os.path.join(root, "imagenetv2-matched-frequency-format-val")
-    imageNet_V2 = ImageNetV2(root_V2, transform=transform)
+    imageNet_V2 = ImageNetV2(root_V2, transform=transform, csvMapFile=csvMapFile)
 
     return imageNet_A, imageNet_V2
 

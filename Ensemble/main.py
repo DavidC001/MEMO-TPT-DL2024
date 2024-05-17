@@ -50,7 +50,7 @@ from torchvision.models import resnet50, ResNet50_Weights
 
 def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
     # prepare MEMO
-    imageNet_A, imageNet_V2 = memo_get_datasets(augmix=False, augs=naug)
+    imageNet_A, imageNet_V2 = memo_get_datasets(augmentation='cut', augs=naug)
     dataset = imageNet_A if A else imageNet_V2
 
     mapping = list(dataset.classnames.keys())
@@ -58,14 +58,15 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True):
         mapping[i] = int(id)
     
     rn50 = resnet50(weights=ResNet50_Weights.DEFAULT)
-    memo = EasyMemo(rn50, classes_mask=mapping, device=device, prior_strength=prior_strength)
+    memo = EasyMemo(rn50, device=device, classes_mask=mapping, prior_strength=prior_strength)
     
     return memo, dataset
 
 
 
-def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cuda", niter=1, top=0.1):
+def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cuda", niter=1, top=0.1, no_backwards=False, testSingleModels=False):
     correct = 0
+    correct_no_back = 0
     correctSingle = [0, 0]
     cnt = 0
 
@@ -76,17 +77,15 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
     MEMO_temp = 0.7
     temps = [TPT_temp, MEMO_temp]
 
-    testSingleModels = True
-
     #shuffle the data
     indx = np.random.permutation(range(len(tpt_data)))
 
     model = Ensemble(models=[tpt_model, memo_model], temps=temps, 
-                     device=device, test_single_models=testSingleModels)
-
+                     device=device, test_single_models=testSingleModels, 
+                     no_backwards=no_backwards)
+    print("Ensemble model created starting TTA, samples:",len(indx))
     for i in indx:
-        cnt += 1  
-
+        cnt += 1 
         img_TPT = tpt_data[i]["img"]
         img_MEMO = memo_data[i]["img"]
         data = [img_TPT, img_MEMO]
@@ -98,7 +97,7 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
 
         print (f"Testing on {i} - name: {name} - label: {label}")
 
-        models_out, prediction = model(data, niter=niter, top=0.1)
+        models_out, pred_no_back, prediction = model(data, niter=niter, top=0.1)
         models_out = [int(mapping[model_out]) for model_out in models_out]
         prediction = int(mapping[prediction])
         
@@ -108,6 +107,12 @@ def test(tpt_model:EasyTPT, memo_model, tpt_data, mapping, memo_data, device="cu
                     correctSingle[i] += 1
                 
                 print(f"\t{models_names[i]} model accuracy: {correctSingle[i]}/{cnt} - predicted class {model_out}: {class_names[model_out]} - tested: {cnt} / {len(tpt_data)}")
+
+        if no_backwards:
+            pred_no_back = int(mapping[pred_no_back])
+            if label == pred_no_back:
+                correct_no_back += 1
+            print(f"\tSimple Ens accuracy: {correct_no_back}/{cnt} - predicted class {pred_no_back}: {class_names[pred_no_back]} - tested: {cnt} / {len(tpt_data)}")
 
         if label == prediction:
             correct += 1
@@ -121,6 +126,8 @@ def main():
     naug = 64
     top = 0.1
     niter = 1
+    testSingleModels = False
+    no_backwards = False
 
     #set the seed
     torch.manual_seed(0)
@@ -129,17 +136,13 @@ def main():
     tpt_model, tpt_data, mapping = TPT("cuda", naug=naug, A=imageNetA)
     
     memo_model, memo_data = memo("cuda", naug=naug, A=imageNetA)
-    print(memo_model)
-    #add a dropout layer to the memo model
-    memo_model.net.layer4.add_module("dropout", torch.nn.Dropout(0.5))
-    print(memo_model)
 
     if (imageNetA):
         print("Testing on ImageNet-A")
     else:
         print("Testing on ImageNet-V2")
 
-    test(tpt_model, memo_model, tpt_data, mapping, memo_data, device, niter, top)
+    test(tpt_model, memo_model, tpt_data, mapping, memo_data, device, niter, top, no_backwards, testSingleModels)
 
 if __name__ == "__main__":
     main()
