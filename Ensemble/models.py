@@ -1,24 +1,27 @@
 import torch
 from torch import nn
 from math import floor
+import sys
+sys.path.append(".")
+from EasyModel import EasyModel
 
 class Ensemble(nn.Module):
     """
     Ensemble class. Implements an ensemble of models with entropy minimization.
 
     Attributes:
-        models (list): A list of models to be used in the ensemble.
+        models (list[EasyModel]): A list of models to be used in the ensemble.
         temps (list): A list of temperature values corresponding to each model.
         test_single_models (bool): Whether to test each individual model in addition to the ensemble.
         backward (bool): Whether to perform the entropy minimization step.
         device (str): The device to be used for computation.
     """
-    def __init__(self, models, temps, device="cuda", test_single_models=False, no_backwards=False):
+    def __init__(self, models:list[EasyModel], temps, device="cuda", test_single_models=False, no_backwards=False):
         """
         Initializes an Ensemble object.
 
         Args:
-            models (list): A list of models to be used in the ensemble.
+            models (list[EasyModel]): A list of models to be used in the ensemble.
             temps (list): A list of temperature values corresponding to each model.
             device (str, optional): The device to be used for computation. Defaults to "cuda".
             test_single_models (bool, optional): Whether to test each individual model in addition to the ensemble. Defaults to False.
