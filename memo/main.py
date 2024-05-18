@@ -1,9 +1,11 @@
 import sys
 import torch
+import time
 import numpy as np
 import torch.nn as nn
 import torchvision.models as models
 from tqdm import tqdm
+from datetime import timedelta
 
 sys.path.append('.')
 from memo.utils import memo_get_datasets
@@ -12,6 +14,8 @@ from memo.models import EasyMemo
 
 def testing_step(model, dataset, mapping: bool | list, test):
     print(f"Starting {test} evaluation...")
+    start = time.time()
+
     correct = 0
     cnt = 0
     index = np.random.permutation(range(len(dataset)))
@@ -25,6 +29,7 @@ def testing_step(model, dataset, mapping: bool | list, test):
         correct += mapping[prediction] == label
         cnt += 1
         iterate.set_description(desc=f"Current accuracy {(correct / cnt) * 100:.2f}")
+    print(f"Time taken for {test_name}: {timedelta(seconds=(time.time() - start))}")
 
 
 if __name__ == "__main__":
