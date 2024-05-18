@@ -51,5 +51,5 @@ class EasyModel(nn.Module):
     def predict(self, x):
         raise NotImplementedError
     
-    def reset():
+    def reset(self):
         raise NotImplementedError
