@@ -1,0 +1,80 @@
+import sys
+import torch
+import numpy as np
+import torch.nn as nn
+import torchvision.models as models
+from tqdm import tqdm
+
+sys.path.append('.')
+from memo.utils import memo_get_datasets
+from memo.models import EasyMemo
+
+
+def testing_step(model, dataset, mapping: bool | list, test):
+    print(f"Starting {test} evaluation...")
+    correct = 0
+    cnt = 0
+    index = np.random.permutation(range(len(dataset)))
+    iterate = tqdm(index)
+    for i in iterate:
+        data = dataset[i]
+        image = data["img"]
+        label = int(data["label"])
+        prediction = model.predict(image)
+        model.reset()
+        correct += mapping[prediction] == label
+        cnt += 1
+        iterate.set_description(desc=f"Current accuracy {(correct / cnt)*100:.2f}")
+
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
+    mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
+    mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
+    net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+
+    np.random.seed(0)
+    torch.manual_seed(0)
+
+    test_name = "MEMO ImageNetA, without topk selection"
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1)
+    testing_step(memo, imageNet_A, mapping_a, test_name)
+
+    test_name = "MEMO ImageNetV2, without topk selection"
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=0.94, top=1)
+    testing_step(memo, imageNet_V2, mapping_v2, test_name)
+
+    test_name = "MEMO ImageNetA, with topk selection"
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=0.1)
+    testing_step(memo, imageNet_A, mapping_a, test_name)
+
+    test_name = "MEMO ImageNetV2, with topk selection"
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=0.94, top=0.1)
+    testing_step(memo, imageNet_V2, mapping_v2, test_name)
+    # Dropout tests
+    test_name = "DROP ImageNetA, without topk selection"
+    net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
+    del memo, imageNet_V2, imageNet_A
+    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+    testing_step(memo, imageNet_A, mapping_a, test_name)
+
+    test_name = "DROP ImageNetV2, without topk selection"
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
+    testing_step(memo, imageNet_V2, mapping_v2, test_name)
+
+    test_name = "DROP ImageNetA, with topk selection"
+    net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=0.1, drop=True)
+    testing_step(memo, imageNet_A, mapping_a, test_name)
+
+    test_name = "DROP ImageNetV2, with topk selection"
+    del memo
+    memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=0.1, drop=True)
+    testing_step(memo, imageNet_V2, mapping_v2, test_name)
