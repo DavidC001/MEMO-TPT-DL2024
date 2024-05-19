@@ -34,14 +34,20 @@ def testing_step(model, dataset, mapping: bool | list, test):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if not torch.cuda.is_available():
+        print("CUDA is not available, using CPU instead")
+    else:
+        print("CUDA is available, using GPU")
+
     imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
     memo_tests = True
-    drop_tests = False
-    ensemble_tests = False
+    drop_tests = True
+    ensemble_tests = True
 
     np.random.seed(0)
     torch.manual_seed(0)
