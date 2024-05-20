@@ -1,3 +1,5 @@
+import time
+
 import torch
 import torch.nn as nn
 import torch.utils.data
@@ -126,7 +128,6 @@ class EasyMemo(EasyModel):
             for iteration in range(self.niter):
                 self.optimizer.zero_grad()
                 outputs = self.forward(x)
-                outputs, _ = self.select_confident_samples(outputs, self.top)
                 loss = self.criterion(outputs)
                 loss.backward()
                 self.optimizer.step()
@@ -181,17 +182,17 @@ class EasyMemo(EasyModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_V2 = [int(x) for x in imageNet_V2.classnames.keys()]
 
-    dataset = imageNet_V2
-    mapping = mapping_V2
+    dataset = imageNet_A
+    mapping = mapping_a
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
     net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
 
-    memo = EasyMemo(net.to(device), device, mapping, prior_strength=1, top=1, drop=True)
+    memo = EasyMemo(net.to(device), device, mapping, prior_strength=1, top=0.1)
 
     np.random.seed(0)
     torch.manual_seed(0)
