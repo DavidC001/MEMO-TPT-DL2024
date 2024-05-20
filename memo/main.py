@@ -40,7 +40,7 @@ if __name__ == "__main__":
     else:
         print("CUDA is available, using GPU")
 
-    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 8)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
@@ -62,7 +62,8 @@ if __name__ == "__main__":
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
         test_name = "MEMO ImageNetA, with topk selection"
-        del memo
+        del memo, imageNet_V2, imageNet_A
+        imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
         memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=0.1)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
