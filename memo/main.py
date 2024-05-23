@@ -40,17 +40,34 @@ if __name__ == "__main__":
     else:
         print("CUDA is available, using GPU")
 
-    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 8)
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 1)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
-    memo_tests = True
-    drop_tests = True
-    ensemble_tests = True
+    memo_tests = False
+    drop_tests = False
+    ensemble_tests = False
+    baseline_tests = True
 
-    np.random.seed(0)
-    torch.manual_seed(0)
+    # Baseline tests
+    if baseline_tests:
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        test_name = "Baseline ImageNetA"
+        testing_step(memo, imageNet_A, mapping_a, test_name)
+
+        test_name = "Baseline ImageNetV2"
+        testing_step(memo, imageNet_V2, mapping_v2, test_name)
+
+        test_name = "ResNet50 V1 weights ImageNetA"
+        net = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        testing_step(memo, imageNet_A, mapping_a, test_name)
+
+        test_name = "ResNet50 V1 weights ImageNetV2"
+        testing_step(memo, imageNet_V2, mapping_v2, test_name)
+
+    net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
     if memo_tests:
         test_name = "MEMO ImageNetA, without topk selection"
         memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1)
@@ -63,7 +80,7 @@ if __name__ == "__main__":
 
         test_name = "MEMO ImageNetA, with topk selection"
         del memo, imageNet_V2, imageNet_A
-        imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
+        imageNet_A, imageNet_V2 = memo_get_datasets('cut', 64)
         memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=0.1)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 

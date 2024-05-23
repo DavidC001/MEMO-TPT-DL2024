@@ -16,7 +16,7 @@ def memo_get_datasets(augmentation, augs=64):
     Returns: The ImageNetA and ImageNetV2 datasets for the memo model, with the Augmentations already applied
 
     """
-    assert augs > 1, 'The number of augmentations must be greater than 1'
+    assert augs > 0, 'The number of augmentations must be greater than 0'
     memo_transforms = transforms.Compose([transforms.Resize(256),
                                           transforms.CenterCrop(224)])
     preprocess = transforms.Compose([
