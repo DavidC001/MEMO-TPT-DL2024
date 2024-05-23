@@ -55,7 +55,8 @@ class EasyMemo(EasyModel):
         self.weight_decay = weight_decay
         self.opt = opt
         self.confidence_idx = None
-        self.memo_modify_bn_pass()
+        if not drop:
+            self.memo_modify_bn_pass()
         self.criterion = self.avg_entropy
         self.niter = niter
         self.top = top
@@ -207,7 +208,7 @@ if __name__ == "__main__":
         label = int(data["label"])
         dropout_prediction = memo.predict(image)
         memo.reset()
-        correct+=mapping[dropout_prediction] == label
-        cnt+=1
+        correct += mapping[dropout_prediction] == label
+        cnt += 1
         iterate.set_description(desc=f"Current accuracy {correct / cnt:.2f}")
     # print("Accuracy: ", sum(correct) / len(correct))
