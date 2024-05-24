@@ -57,14 +57,19 @@ if __name__ == "__main__":
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "Baseline ImageNetV2"
+        del memo
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
         test_name = "ResNet50 V1 weights ImageNetA"
+        del memo
         net = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
         memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "ResNet50 V1 weights ImageNetV2"
+        del memo
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
