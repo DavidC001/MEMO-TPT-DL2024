@@ -68,7 +68,7 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=
         classes_mask=mapping, 
         prior_strength=prior_strength,
         niter=ttt_steps,
-        drop=(drop>0)
+        ensemble=(drop>0)
     )
     
     return memo, dataset

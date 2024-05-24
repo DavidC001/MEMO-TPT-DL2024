@@ -1,3 +1,5 @@
+import time
+
 import torch
 import torch.nn as nn
 import torch.utils.data
@@ -28,7 +30,7 @@ class EasyMemo(EasyModel):
     """
 
     def __init__(self, net, device, classes_mask, prior_strength: float = 1.0, lr=0.005, weight_decay=0.0001, opt='sgd',
-                 niter=1, top=0.1, drop=False):
+                 niter=1, top=0.1, ensemble=False):
         """
         Initializes the EasyMemo model with various arguments
         Args:
@@ -41,10 +43,11 @@ class EasyMemo(EasyModel):
             opt: Which optimizer to use for this model between 'sgd' and 'adamw' for the respective optimizers
             niter: The number of iterations to run the memo pass for
             top: The percentage of the top logits to consider for confidence selection
+            ensemble: Whether to use the ensemble method or not
         """
         super(EasyMemo, self).__init__()
 
-        self.drop = drop
+        self.ens = ensemble
         self.device = device
         self.prior_strength = prior_strength
         self.net = net.to(device)
@@ -53,7 +56,8 @@ class EasyMemo(EasyModel):
         self.weight_decay = weight_decay
         self.opt = opt
         self.confidence_idx = None
-        self.memo_modify_bn_pass()
+        if not ensemble:
+            self.memo_modify_bn_pass()
         self.criterion = self.avg_entropy
         self.niter = niter
         self.top = top
@@ -96,7 +100,7 @@ class EasyMemo(EasyModel):
         Returns: The logits for that Tensor image
 
         """
-        if self.drop:
+        if self.ens:
             self.net.train()
         else:
             self.net.eval()
@@ -118,15 +122,14 @@ class EasyMemo(EasyModel):
 
         """
         self.niter = niter
-        if self.drop:
+        if self.ens:
             self.net.train()
-            predicted = self.predict_dropout(x)
+            predicted = self.ensemble(x)
         else:
             self.net.eval()
             for iteration in range(self.niter):
                 self.optimizer.zero_grad()
                 outputs = self.forward(x)
-                outputs, _ = self.select_confident_samples(outputs, self.top)
                 loss = self.criterion(outputs)
                 loss.backward()
                 self.optimizer.step()
@@ -171,9 +174,10 @@ class EasyMemo(EasyModel):
             raise ValueError('Invalid optimizer selected')
         return optimizer
 
-    def predict_dropout(self, x):
+    def ensemble(self, x):
         with torch.no_grad():
             outputs = self.forward(x)
+            outputs = nn.functional.softmax(outputs, dim=1)
             prediction = outputs.sum(0).argmax().item()
 
         return prediction
@@ -181,17 +185,17 @@ class EasyMemo(EasyModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 64)
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_V2 = [int(x) for x in imageNet_V2.classnames.keys()]
 
-    dataset = imageNet_V2
-    mapping = mapping_V2
+    dataset = imageNet_A
+    mapping = mapping_a
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
     net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
 
-    memo = EasyMemo(net.to(device), device, mapping, prior_strength=1, top=1, drop=True)
+    memo = EasyMemo(net.to(device), device, mapping, prior_strength=1, top=0.1)
 
     np.random.seed(0)
     torch.manual_seed(0)
@@ -206,7 +210,7 @@ if __name__ == "__main__":
         label = int(data["label"])
         dropout_prediction = memo.predict(image)
         memo.reset()
-        correct+=mapping[dropout_prediction] == label
-        cnt+=1
+        correct += mapping[dropout_prediction] == label
+        cnt += 1
         iterate.set_description(desc=f"Current accuracy {correct / cnt:.2f}")
     # print("Accuracy: ", sum(correct) / len(correct))
