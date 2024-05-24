@@ -30,7 +30,7 @@ class EasyMemo(EasyModel):
     """
 
     def __init__(self, net, device, classes_mask, prior_strength: float = 1.0, lr=0.005, weight_decay=0.0001, opt='sgd',
-                 niter=1, top=0.1, drop=False):
+                 niter=1, top=0.1, ensemble=False):
         """
         Initializes the EasyMemo model with various arguments
         Args:
@@ -43,10 +43,11 @@ class EasyMemo(EasyModel):
             opt: Which optimizer to use for this model between 'sgd' and 'adamw' for the respective optimizers
             niter: The number of iterations to run the memo pass for
             top: The percentage of the top logits to consider for confidence selection
+            ensemble: Whether to use the ensemble method or not
         """
         super(EasyMemo, self).__init__()
 
-        self.drop = drop
+        self.ens = ensemble
         self.device = device
         self.prior_strength = prior_strength
         self.net = net.to(device)
@@ -55,7 +56,7 @@ class EasyMemo(EasyModel):
         self.weight_decay = weight_decay
         self.opt = opt
         self.confidence_idx = None
-        if not drop:
+        if not ensemble:
             self.memo_modify_bn_pass()
         self.criterion = self.avg_entropy
         self.niter = niter
@@ -99,7 +100,7 @@ class EasyMemo(EasyModel):
         Returns: The logits for that Tensor image
 
         """
-        if self.drop:
+        if self.ens:
             self.net.train()
         else:
             self.net.eval()
@@ -121,7 +122,7 @@ class EasyMemo(EasyModel):
 
         """
         self.niter = niter
-        if self.drop:
+        if self.ens:
             self.net.train()
             predicted = self.ensemble(x)
         else:

@@ -55,24 +55,24 @@ if __name__ == "__main__":
 
     # Baseline tests
     if baseline_tests:
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, ensemble=True)
         test_name = "Baseline ImageNetA"
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "Baseline ImageNetV2"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
         test_name = "ResNet50 V1 weights ImageNetA"
         del memo
         net = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "ResNet50 V1 weights ImageNetV2"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
     del net, imageNet_A, imageNet_V2
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
@@ -104,23 +104,23 @@ if __name__ == "__main__":
         net.layer4.add_module('dropout', nn.Dropout(0.5, inplace=True))
         del memo, imageNet_V2, imageNet_A
         imageNet_A, imageNet_V2 = memo_get_datasets('identity', 8)
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "DROP ImageNetV2, without topk selection"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
         test_name = "DROP ImageNetA, with topk selection"
         del memo, imageNet_V2, imageNet_A
         imageNet_A, imageNet_V2 = memo_get_datasets('identity', 64)
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=0.1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=0.1, ensemble=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "DROP ImageNetV2, with topk selection"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=0.1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=0.1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
     if ensemble_tests:
@@ -129,21 +129,21 @@ if __name__ == "__main__":
         net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
         net.layer4.add_module('dropout', nn.Dropout(0, inplace=True))
         imageNet_A, imageNet_V2 = memo_get_datasets('cut', 8)
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "DROP ImageNetV2, cut ensemble  without topk selection"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
         test_name = "DROP ImageNetA, cut ensemble  with topk selection"
         del memo, imageNet_V2, imageNet_A
         imageNet_A, imageNet_V2 = memo_get_datasets('cut', 64)
-        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=0.1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=1, top=0.1, ensemble=True)
         testing_step(memo, imageNet_A, mapping_a, test_name)
 
         test_name = "DROP ImageNetV2, cut ensemble  with topk selection"
         del memo
-        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=0.1, drop=True)
+        memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=0.1, ensemble=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
