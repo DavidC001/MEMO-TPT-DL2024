@@ -93,6 +93,7 @@ def main():
         ttt_steps=TTT_STEPS,
         lr=LR,
         align_steps=ALIGN_STEPS,
+        ensamble=True,
         # align_steps=2,
     )
 
@@ -130,7 +131,7 @@ def main():
         out_id = tpt.predict(imgs)
         tpt_predicted = classnames[out_id]
 
-        if id_mapping[out_id] == label:
+        if int(id_mapping[out_id]) == label:
             print(":D")
             tpt_correct += 1
         else:

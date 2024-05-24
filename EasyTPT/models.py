@@ -8,6 +8,7 @@ import numpy as np
 from clip import load, tokenize
 
 import sys
+
 sys.path.append(".")
 from EasyModel import EasyModel
 
@@ -165,6 +166,7 @@ class EasyTPT(EasyModel):
         arch="RN50",
         splt_ctx=False,
         classnames=None,
+        ensamble=False,
         ttt_steps=1,
         lr=0.005,
         align_steps=0,
@@ -179,7 +181,7 @@ class EasyTPT(EasyModel):
         self.base_prompt = base_prompt
         self.ttt_steps = ttt_steps
         self.selected_idx = None
-
+        self.ensamble = ensamble
         self.align_steps = align_steps
         # Load clip
         clip, self.preprocess = load(
@@ -224,6 +226,12 @@ class EasyTPT(EasyModel):
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
+        if self.ensamble:
+            print("[EasyTPT] Running TPT in Ensemble mode")
+
+        if self.align_steps > 0:
+            print("[EasyTPT] Running TPT with alignment")
+
         # for name, param in self.named_parameters():
         #     if param.requires_grad:
         #         print(f"[EasyTPT] Training parameter: {name}")
@@ -233,6 +241,7 @@ class EasyTPT(EasyModel):
         If x is a list of augmentations, run the confidence selection,
         otherwise just run the inference
         """
+
         self.eval()
         # breakpoint()
         if isinstance(x, list):
@@ -251,7 +260,7 @@ class EasyTPT(EasyModel):
             x = x.to(self.device)
 
             logits = self.inference(x)
-        
+
         # print (f"[EasyTPT] input shape: {x.shape}")
         # print("[EasyTPT] logits shape: ", logits.shape)
         return logits
@@ -354,20 +363,25 @@ class EasyTPT(EasyModel):
     def predict(self, images, niter=1):
 
         # self.reset()
+        if self.ensamble:
+            with torch.no_grad():
+                out = self(images)
+                marginal_prob = F.softmax(out, dim=1).mean(0)
+                out_id = marginal_prob.argmax().item()
+        else:
+            if self.align_steps > 0:
+                self.align_embeddings(images)
 
-        if self.align_steps > 0:
-            self.align_embeddings(images)
-
-        for _ in range(niter):
-            out = self(images)
-            loss = self.avg_entropy(out)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        with torch.no_grad():
-            out = self(images[0])
-            out_id = out.argmax(1).item()
-            prediction = self.prompt_learner.classnames[out_id]
+            for _ in range(niter):
+                out = self(images)
+                loss = self.avg_entropy(out)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            with torch.no_grad():
+                out = self(images[0])
+                out_id = out.argmax(1).item()
+                prediction = self.prompt_learner.classnames[out_id]
 
         # return out_id, prediction
         return out_id
