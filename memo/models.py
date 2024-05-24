@@ -123,7 +123,7 @@ class EasyMemo(EasyModel):
         self.niter = niter
         if self.drop:
             self.net.train()
-            predicted = self.predict_dropout(x)
+            predicted = self.ensemble(x)
         else:
             self.net.eval()
             for iteration in range(self.niter):
@@ -173,7 +173,7 @@ class EasyMemo(EasyModel):
             raise ValueError('Invalid optimizer selected')
         return optimizer
 
-    def predict_dropout(self, x):
+    def ensemble(self, x):
         with torch.no_grad():
             outputs = self.forward(x)
             prediction = outputs.sum(0).argmax().item()
