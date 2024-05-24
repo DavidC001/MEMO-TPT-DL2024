@@ -16,6 +16,9 @@ def testing_step(model, dataset, mapping: bool | list, test):
     print(f"Starting {test} evaluation...")
     start = time.time()
 
+    np.random.seed(0)
+    torch.manual_seed(0)
+
     correct = 0
     cnt = 0
     index = np.random.permutation(range(len(dataset)))
@@ -45,10 +48,10 @@ if __name__ == "__main__":
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
 
-    memo_tests = False
-    drop_tests = False
-    ensemble_tests = False
-    baseline_tests = True
+    memo_tests = True
+    drop_tests = True
+    ensemble_tests = True
+    baseline_tests = False
 
     # Baseline tests
     if baseline_tests:
