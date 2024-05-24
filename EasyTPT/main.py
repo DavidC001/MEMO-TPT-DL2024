@@ -93,7 +93,7 @@ def main():
         ttt_steps=TTT_STEPS,
         lr=LR,
         align_steps=ALIGN_STEPS,
-        ensamble=True,
+        ensemble=True,
         # align_steps=2,
     )
 

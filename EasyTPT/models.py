@@ -166,7 +166,7 @@ class EasyTPT(EasyModel):
         arch="RN50",
         splt_ctx=False,
         classnames=None,
-        ensamble=False,
+        ensemble=False,
         ttt_steps=1,
         lr=0.005,
         align_steps=0,
@@ -181,7 +181,7 @@ class EasyTPT(EasyModel):
         self.base_prompt = base_prompt
         self.ttt_steps = ttt_steps
         self.selected_idx = None
-        self.ensamble = ensamble
+        self.ensemble = ensemble
         self.align_steps = align_steps
         # Load clip
         clip, self.preprocess = load(
@@ -226,7 +226,7 @@ class EasyTPT(EasyModel):
             self.emb_optim_state = deepcopy(self.emb_optimizer.state_dict())
             self.clip_init_state = deepcopy(self.clip.visual.state_dict())
 
-        if self.ensamble:
+        if self.ensemble:
             print("[EasyTPT] Running TPT in Ensemble mode")
 
         if self.align_steps > 0:
@@ -363,7 +363,7 @@ class EasyTPT(EasyModel):
     def predict(self, images, niter=1):
 
         # self.reset()
-        if self.ensamble:
+        if self.ensemble:
             with torch.no_grad():
                 out = self(images)
                 marginal_prob = F.softmax(out, dim=1).mean(0)
