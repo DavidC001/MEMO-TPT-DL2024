@@ -176,6 +176,7 @@ class EasyMemo(EasyModel):
     def ensemble(self, x):
         with torch.no_grad():
             outputs = self.forward(x)
+            outputs = nn.functional.softmax(outputs, dim=1)
             prediction = outputs.sum(0).argmax().item()
 
         return prediction
