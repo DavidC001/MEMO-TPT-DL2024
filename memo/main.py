@@ -32,7 +32,7 @@ def testing_step(model, dataset, mapping: bool | list, test):
         correct += mapping[prediction] == label
         cnt += 1
         iterate.set_description(desc=f"Current accuracy {(correct / cnt) * 100:.2f}")
-    print(f"Time taken for {test_name}: {timedelta(seconds=(time.time() - start))}")
+    print("--------------------------------------------------------------")
 
 
 if __name__ == "__main__":
