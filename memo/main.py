@@ -71,8 +71,9 @@ if __name__ == "__main__":
         del memo
         memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=1, top=1, drop=True)
         testing_step(memo, imageNet_V2, mapping_v2, test_name)
-
+    del net, imageNet_A, imageNet_V2
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    imageNet_A, imageNet_V2 = memo_get_datasets('cut', 8)
     if memo_tests:
         test_name = "MEMO ImageNetA, without topk selection"
         memo = EasyMemo(net.to(device), device, mapping_a, prior_strength=0.94, top=1)
