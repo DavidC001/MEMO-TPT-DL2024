@@ -13,10 +13,10 @@ class Ensemble(nn.Module):
         models (list[EasyModel]): A list of models to be used in the ensemble.
         temps (list): A list of temperature values corresponding to each model.
         test_single_models (bool): Whether to test each individual model in addition to the ensemble.
-        backward (bool): Whether to perform the entropy minimization step.
+        simple_ensemble (bool): Whether to perform the entropy minimization step.
         device (str): The device to be used for computation.
     """
-    def __init__(self, models:list[EasyModel], temps, device="cuda", test_single_models=False, no_backwards=False):
+    def __init__(self, models:list[EasyModel], temps, device="cuda", test_single_models=False, simple_ensemble=False):
         """
         Initializes an Ensemble object.
 
@@ -25,14 +25,14 @@ class Ensemble(nn.Module):
             temps (list): A list of temperature values corresponding to each model.
             device (str, optional): The device to be used for computation. Defaults to "cuda".
             test_single_models (bool, optional): Whether to test each individual model in addition to the ensemble. Defaults to False.
-            no_backwards (bool, optional): Whether to perform the entropy minimization step. Defaults to False.
+            simple_ensemble (bool, optional): Whether to perform the entropy minimization step. Defaults to False.
         """
         super(Ensemble, self).__init__()
         self.models = models
         self.temps = temps
         self.test_single_models = test_single_models
         self.device = device
-        self.no_backwards = no_backwards
+        self.simple_ensemble = simple_ensemble
 
     def entropy(self, logits):
         """
@@ -134,7 +134,7 @@ class Ensemble(nn.Module):
             avg_logit = self.marginal_distribution(outs)
             prediction = torch.argmax(avg_logit, dim=0)
 
-        if self.no_backwards:
+        if self.simple_ensemble:
             self.reset()
             outs = self.get_models_outs(inputs, top)
             avg_logit = self.marginal_distribution(outs)
