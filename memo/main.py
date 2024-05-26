@@ -47,6 +47,7 @@ if __name__ == "__main__":
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    memo = []
 
     memo_tests = False
     drop_tests = True
