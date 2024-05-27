@@ -63,6 +63,7 @@ def main():
     AUGMIX = args["augmix"]
     EVAL_CLIP = args["clip"]
     ALIGN_STEPS = args["align_steps"]
+    ENSEMBLE = args["ensemble"]
 
     data_root = "datasets"
 
@@ -94,7 +95,8 @@ def main():
         lr=LR,
         align_steps=ALIGN_STEPS,
         ensemble=True,
-        # align_steps=2,
+        # ensemble=ENSEMBLE,
+        confidence=0.10,
     )
 
     tpt_correct = 0

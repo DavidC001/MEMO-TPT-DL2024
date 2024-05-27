@@ -76,5 +76,13 @@ def get_args():
         metavar="",
     )
 
+    parser.add_argument(
+        "-en",
+        "--ensemble",
+        action="store_true",
+        help="Use ensemble mode",
+        default=False,
+    )
+
     args = vars(parser.parse_args())
     return args
