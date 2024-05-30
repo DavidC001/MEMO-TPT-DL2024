@@ -65,12 +65,6 @@ if __name__ == "__main__":
             "confidence": 0.10,
         },
         {
-            "name": "TPT_ens_sel_V2",
-            "dataset": "V2",
-            "ensemble": True,
-            "confidence": 0.10,
-        },
-        {
             "name": "TPT_align_A",
             "dataset": "A",
             "align_steps": 1,
