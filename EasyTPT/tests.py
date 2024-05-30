@@ -186,6 +186,8 @@ if __name__ == "__main__":
             if cnt == TEST_STOP:
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
+        
+        del tpt, imageNetA, imageNetV2
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc,3)} over {cnt} samples")
 
