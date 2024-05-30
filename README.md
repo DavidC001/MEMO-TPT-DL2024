@@ -87,7 +87,8 @@ MEMO-TPT-DL2024
     └── main.py
 ```
 # Models
-![Diagrammi UML Deep Learning - Page 1](https://github.com/DavidC001/MEMO-TPT-DL2024/assets/40665241/201fea55-8ed3-4a71-bd4f-a84a2e912cb8)
+![Diagrammi UML Deep Learning - Page 1](https://github.com/DavidC001/MEMO-TPT-DL2024/assets/40665241/09461091-b12b-4379-88ff-8530e04e1255)
+
 
 ## TPT
 The TPT (Test-Time Prompt Tuning) module, represented by the `EasyTPT` class, is designed to use CLIP with prompt tuning. This class incorporates various configurations for model architecture, prompt settings, and optimization parameters. Key functionalities include:
