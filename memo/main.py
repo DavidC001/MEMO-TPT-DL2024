@@ -47,8 +47,9 @@ if __name__ == "__main__":
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    memo = []
 
-    memo_tests = True
+    memo_tests = False
     drop_tests = True
     ensemble_tests = True
     baseline_tests = False
@@ -98,6 +99,8 @@ if __name__ == "__main__":
         memo = EasyMemo(net.to(device), device, mapping_v2, prior_strength=0.94, top=0.1)
         MEMO_testing_step(memo, imageNet_V2, mapping_v2, test_name)
 
+    del net
+    net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
     # Dropout tests
     if drop_tests:
         test_name = "DROP ImageNetA, without topk selection"
