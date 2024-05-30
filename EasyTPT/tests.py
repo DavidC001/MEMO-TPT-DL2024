@@ -155,7 +155,8 @@ if __name__ == "__main__":
                 tpt.reset()
 
             if ALIGN_STEPS > 0:
-                print(f"[EasyTPT] Aligning embeddings for {ALIGN_STEPS} steps")
+                if VERBOSE:
+                    print(f"[EasyTPT] Aligning embeddings for {ALIGN_STEPS} steps")
                 tpt.align_embeddings(imgs)
 
             out_id = tpt.predict(imgs)
