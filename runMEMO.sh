@@ -12,5 +12,5 @@ module load cuda/12.1
 source /home/davide.cavicchini/.bashrc
 conda activate SIV_hpe
 
-python3 memo/script_test_in.py
+python3 memo/main.py
 
