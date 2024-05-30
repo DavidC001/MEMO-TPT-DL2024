@@ -43,6 +43,7 @@ if __name__ == "__main__":
         {
             "name": "TPT_ens_nosel_A",
             "dataset": "A",
+            "augs": 8,
             "ensemble": True,
             "confidence": 1,
         },
@@ -55,6 +56,7 @@ if __name__ == "__main__":
         {
             "name": "TPT_ens_nosel_V2",
             "dataset": "V2",
+            "augs": 8,
             "ensemble": True,
             "confidence": 1,
         },
