@@ -20,7 +20,7 @@ if __name__ == "__main__":
         "ttt_steps": 1,
         "align_steps": 0,
         "ensemble": False,
-        "test_stop": 1,
+        "test_stop": -1,
         "confidence": 0.10,
         "base_prompt": "A photo of a [CLS]",
         "arch": "RN50",
