@@ -170,6 +170,7 @@ class EasyTPT(EasyModel):
         ttt_steps=1,
         lr=0.005,
         align_steps=0,
+        confidence=0.10,
     ):
         super(EasyTPT, self).__init__()
         self.device = device
@@ -183,6 +184,8 @@ class EasyTPT(EasyModel):
         self.selected_idx = None
         self.ensemble = ensemble
         self.align_steps = align_steps
+        self.confidence = confidence
+
         # Load clip
         clip, self.preprocess = load(
             arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
@@ -236,11 +239,14 @@ class EasyTPT(EasyModel):
         #     if param.requires_grad:
         #         print(f"[EasyTPT] Training parameter: {name}")
 
-    def forward(self, x, top=0.10):
+    def forward(self, x, top=-1):
         """
         If x is a list of augmentations, run the confidence selection,
         otherwise just run the inference
         """
+
+        if top == -1:
+            top = self.confidence
 
         self.eval()
         # breakpoint()
