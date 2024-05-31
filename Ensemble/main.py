@@ -137,6 +137,7 @@ def test(models, datasets, temps, mapping, names,
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    #--------------------ImageNet-A--------------------
     imageNetA = True
     naug = 64
     top = 0.1
@@ -169,11 +170,49 @@ def main():
         models.append(model)
         datasets.append(data)
 
-    if (imageNetA):
-        print("Testing on ImageNet-A")
-    else:
-        print("Testing on ImageNet-V2")
+    print("Testing on ImageNet-A")
+    torch.autograd.set_detect_anomaly(True)
+    test(models=models, datasets=datasets, temps=temps, mapping=mapping, names=names, 
+         device=device, niter=niter, top=top, simple_ensemble=simple_ensemble, testSingleModels=testSingleModels)
+    
+    for i in range(len(models)):
+        del models[i]
+        del datasets[i]
+    
+    #--------------------ImageNet-V2--------------------
+    imageNetA = False
+    naug = 32
+    top = 0.1
+    niter = 1
+    testSingleModels = False
+    simple_ensemble = True
 
+    #set the seed
+    torch.manual_seed(0)
+    np.random.seed(0)
+
+    #ENS
+    models_type = ["memo", "tpt"]
+    args = [
+        {"device": "cuda", "naug": naug, "A": imageNetA, "drop": 0, "ttt_steps": 1, "model": "RN50"},
+        {"device": "cuda", "naug": naug, "A": imageNetA, "ttt_steps": 1, "align_steps": 0, "arch": "RN50"}
+        ]
+    temps = [1.55, 0.7]
+    names = ["MEMO", "TPT"]
+
+    models = []
+    datasets = []
+    mapping = None
+    load_model = {
+        "memo": memo,
+        "tpt": TPT
+    }
+    for i in range(len(models_type)):
+        model, data, mapping = load_model[models_type[i]](**args[i])
+        models.append(model)
+        datasets.append(data)
+
+    print("Testing on ImageNet-V2")
     torch.autograd.set_detect_anomaly(True)
     test(models=models, datasets=datasets, temps=temps, mapping=mapping, names=names, 
          device=device, niter=niter, top=top, simple_ensemble=simple_ensemble, testSingleModels=testSingleModels)

@@ -12,5 +12,5 @@ module load cuda/12.1
 source /home/davide.cavicchini/.bashrc
 conda activate SIV_hpe
 
-python3 EasyTPT/main.py
+python3 EasyTPT/tests.py
 

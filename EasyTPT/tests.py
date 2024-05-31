@@ -45,6 +45,7 @@ if __name__ == "__main__":
         {
             "name": "TPT_sel_V2",
             "dataset": "V2",
+            "augs": 32,
         },
         {
             "name": "TPT_ens_nosel_A",
@@ -69,6 +70,7 @@ if __name__ == "__main__":
         {
             "name": "TPT_ens_sel_V2",
             "dataset": "V2",
+            "augs": 32,
             "ensemble": True,
             "confidence": 0.10,
         },
@@ -80,6 +82,7 @@ if __name__ == "__main__":
         {
             "name": "TPT_align_V2",
             "dataset": "V2",
+            "augs": 32,
             "align_steps": 1,
         },
     ]
@@ -199,6 +202,8 @@ if __name__ == "__main__":
             if cnt == TEST_STOP:
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
+        
+        del tpt, imageNetA, imageNetV2
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc,3)} over {cnt} samples")
 
