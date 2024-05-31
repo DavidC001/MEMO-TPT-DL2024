@@ -66,8 +66,8 @@ class Ensemble(nn.Module):
             #normalize sum to 1
             scale = scale / torch.sum(scale)
 
-        print("\t\t[Ensemble] Entropies: ", entropies)
-        print("\t\t[Ensemble] Scales: ", scale)
+        # print("\t\t[Ensemble] Entropies: ", entropies)
+        # print("\t\t[Ensemble] Scales: ", scale)
 
         avg_logits = torch.sum(torch.stack([scale[i].item() * avg_models_logits[i] for i in range(len(avg_models_logits))]), dim=0)
 
