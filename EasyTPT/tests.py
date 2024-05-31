@@ -165,6 +165,7 @@ if __name__ == "__main__":
 
             start = time.time()
 
+            cnt += 1
             with torch.no_grad():
                 tpt.reset()
 
@@ -177,8 +178,6 @@ if __name__ == "__main__":
             tpt_predicted = classnames[out_id]
 
             end = time.time()
-
-            cnt += 1
 
             total_time += end - start
             avg_time = total_time / cnt
