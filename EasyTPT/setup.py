@@ -86,3 +86,22 @@ def get_args():
 
     args = vars(parser.parse_args())
     return args
+
+
+def get_test_args():
+    parser = argparse.ArgumentParser(
+        prog="tests.py",
+        description="Run TPT tests",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        type=int,
+        help="Frequency of verbose output",
+        default=100,
+        metavar="",
+    )
+
+    args = vars(parser.parse_args())
+    return args
