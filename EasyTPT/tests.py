@@ -2,16 +2,22 @@ import sys
 
 sys.path.append(".")
 
+import time
 import torch
 import numpy as np
 
 from EasyTPT.utils import tpt_get_datasets
 from EasyTPT.models import EasyTPT
+from EasyTPT.setup import get_test_args
 
 
 if __name__ == "__main__":
 
-    VERBOSE = True
+    args = get_test_args()
+
+    VERBOSE = args["verbose"]
+    if VERBOSE == -1:
+        VERBOSE = sys.maxsize
 
     base_test = {
         "name": "Base",
@@ -81,7 +87,7 @@ if __name__ == "__main__":
         },
     ]
 
-    for settings in tests:
+    for idx, settings in enumerate(tests):
 
         test = base_test | settings
 
@@ -101,7 +107,7 @@ if __name__ == "__main__":
         CONFIDENCE = test["confidence"]
 
         print("-" * 30)
-        print(f"[TEST] Running test {test_name}: {test}")
+        print(f"[TEST] Running test {idx+1} of {len(tests)}: {test_name} \n{test}")
 
         print(f"[TEST] loading datasets with {AUGS} augmentation...")
         datasetRoot = "datasets"
@@ -143,6 +149,7 @@ if __name__ == "__main__":
 
         cnt = 0
         tpt_correct = 0
+        total_time = 0
 
         idxs = [i for i in range(len(dataset))]
 
@@ -156,37 +163,45 @@ if __name__ == "__main__":
             imgs = data["img"]
             name = data["name"]
 
+            start = time.time()
+
+            cnt += 1
             with torch.no_grad():
                 tpt.reset()
 
             if ALIGN_STEPS > 0:
-                if VERBOSE:
+                if cnt % VERBOSE == 0:
                     print(f"[EasyTPT] Aligning embeddings for {ALIGN_STEPS} steps")
                 tpt.align_embeddings(imgs)
 
             out_id = tpt.predict(imgs)
             tpt_predicted = classnames[out_id]
 
+            end = time.time()
+
+            total_time += end - start
+            avg_time = total_time / cnt
             if int(id_mapping[out_id]) == label:
-                if VERBOSE:
+                if cnt % VERBOSE == 0:
                     print(":D")
                 tpt_correct += 1
             else:
-                if VERBOSE:
+                if cnt % VERBOSE == 0:
                     print(":(")
-            cnt += 1
 
             tpt_acc = tpt_correct / (cnt)
 
-            if VERBOSE:
+            if cnt % VERBOSE == 0:
                 print(f"TPT Accuracy: {round(tpt_acc,3)}")
                 print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
-                print(f"after {cnt} samples\n")
+                print(
+                    f"after {cnt} samples, average time {round(avg_time,3)}s ({round(1/avg_time,3)}it/s)\n"
+                )
 
             if cnt == TEST_STOP:
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
-        
+
         del tpt, imageNetA, imageNetV2
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc,3)} over {cnt} samples")
