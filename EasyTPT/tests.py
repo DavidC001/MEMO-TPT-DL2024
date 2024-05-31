@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "ttt_steps": 1,
         "align_steps": 0,
         "ensemble": False,
-        "test_stop": 10,
+        "test_stop": -1,
         "confidence": 0.10,
         "base_prompt": "A photo of a [CLS]",
         "arch": "RN50",
@@ -202,7 +202,7 @@ if __name__ == "__main__":
             if cnt == TEST_STOP:
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
-        
+
         del tpt, imageNetA, imageNetV2
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc,3)} over {cnt} samples")
