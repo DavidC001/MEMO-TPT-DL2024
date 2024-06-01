@@ -16,7 +16,7 @@ from EasyTPT.models import EasyTPT
 
 from Ensemble.models import Ensemble
 
-def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0):
+def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0, top=0.1):
     # prepare TPT
     if not torch.cuda.is_available():
         print("Using CPU this is no bueno")
@@ -41,7 +41,8 @@ def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0)
         classnames=classnames,
         device=device,
         ttt_steps=ttt_steps,
-        align_steps=align_steps
+        align_steps=align_steps,
+        confidence=top
     )
     
     return tpt, dataset, mapping
@@ -50,7 +51,7 @@ def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0)
 from memo.models import memo_get_datasets, EasyMemo
 import torchvision.models as models
 
-def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=1, model="RN50"):
+def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=1, model="RN50", top=0.1):
     load_model = {
         "RN50": models.resnet50,
         "RNXT": models.resnext50_32x4d
@@ -76,11 +77,11 @@ def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=
         classes_mask=mapping, 
         prior_strength=prior_strength,
         niter=ttt_steps,
-        ensemble=(drop>0)
+        ensemble=(drop>0),
+        top=top
     )
     
     return memo, dataset, mapping
-
 
 
 def test(models, datasets, temps, mapping, names,
@@ -88,7 +89,7 @@ def test(models, datasets, temps, mapping, names,
          simple_ensemble=False, testSingleModels=False):
     correct = 0
     correct_no_back = 0
-    correctSingle = [0, 0]
+    correctSingle = [0]*len(models)
     cnt = 0
 
     class_names = get_classes_names()
@@ -139,10 +140,10 @@ def main():
 
     #--------------------ImageNet-A--------------------
     imageNetA = True
-    naug = 64
-    top = 0.1
+    naug = 6
+    top = 1
     niter = 1
-    testSingleModels = False
+    testSingleModels = True
     simple_ensemble = True
 
     #set the seed
@@ -152,8 +153,8 @@ def main():
     #ENS
     models_type = ["memo", "tpt"]
     args = [
-        {"device": "cuda", "naug": naug, "A": imageNetA, "drop": 0, "ttt_steps": 1, "model": "RN50"},
-        {"device": "cuda", "naug": naug, "A": imageNetA, "ttt_steps": 1, "align_steps": 0, "arch": "RN50"}
+        {"device": "cuda", "naug": naug, "A": imageNetA, "drop": 0, "ttt_steps": 1, "model": "RN50", "top": top},
+        {"device": "cuda", "naug": naug, "A": imageNetA, "ttt_steps": 1, "align_steps": 0, "arch": "RN50", "top": top}
         ]
     temps = [1.55, 0.7]
     names = ["MEMO", "TPT"]
@@ -194,8 +195,8 @@ def main():
     #ENS
     models_type = ["memo", "tpt"]
     args = [
-        {"device": "cuda", "naug": naug, "A": imageNetA, "drop": 0, "ttt_steps": 1, "model": "RN50"},
-        {"device": "cuda", "naug": naug, "A": imageNetA, "ttt_steps": 1, "align_steps": 0, "arch": "RN50"}
+        {"device": "cuda", "naug": naug, "A": imageNetA, "drop": 0, "ttt_steps": 1, "model": "RN50", "top": top},
+        {"device": "cuda", "naug": naug, "A": imageNetA, "ttt_steps": 1, "align_steps": 0, "arch": "RN50", "top": top},
         ]
     temps = [1.55, 0.7]
     names = ["MEMO", "TPT"]
