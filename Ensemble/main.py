@@ -58,8 +58,8 @@ def main():
 
             "models_type": ["memo", "memo"],
             "args": [
-                {"device": "cuda", "naug": 64, "drop": 0, "ttt_steps": 1, "model": "RN50"},
-                {"device": "cuda", "naug": 64, "drop": 0, "ttt_steps": 1, "model": "RNXT"}
+                {"device": "cuda", "drop": 0, "ttt_steps": 1, "model": "RN50"},
+                {"device": "cuda", "drop": 0, "ttt_steps": 1, "model": "RNXT"}
             ],
             "temps": [1, 1],
             "names": ["MEMO RN50", "MEMO RNXT"],
