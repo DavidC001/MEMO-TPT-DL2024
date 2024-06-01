@@ -10,7 +10,6 @@ from EasyTPT.utils import tpt_get_datasets
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_test_args
 
-
 if __name__ == "__main__":
 
     args = get_test_args()
@@ -18,7 +17,7 @@ if __name__ == "__main__":
     VERBOSE = args["verbose"]
     if VERBOSE == -1:
         VERBOSE = sys.maxsize
-
+    DATA_TO_TEST = args["data_to_test"]
     base_test = {
         "name": "Base",
         "dataset": "A",
@@ -37,55 +36,63 @@ if __name__ == "__main__":
 
     # test_step stops the testing after a certain number of samples
     # to run the entire dataset keep it at -1
-    tests = [
-        {
-            "name": "TPT_sel_A",
-            "dataset": "A",
-        },
-        {
-            "name": "TPT_sel_V2",
-            "dataset": "V2",
-            "augs": 32,
-        },
-        {
-            "name": "TPT_ens_nosel_A",
-            "dataset": "A",
-            "augs": 8,
-            "ensemble": True,
-            "confidence": 1,
-        },
-        {
-            "name": "TPT_ens_sel_A",
-            "dataset": "A",
-            "ensemble": True,
-            "confidence": 0.10,
-        },
-        {
-            "name": "TPT_ens_nosel_V2",
-            "dataset": "V2",
-            "augs": 8,
-            "ensemble": True,
-            "confidence": 1,
-        },
-        {
-            "name": "TPT_ens_sel_V2",
-            "dataset": "V2",
-            "augs": 32,
-            "ensemble": True,
-            "confidence": 0.10,
-        },
-        {
-            "name": "TPT_align_A",
-            "dataset": "A",
-            "align_steps": 1,
-        },
-        {
-            "name": "TPT_align_V2",
-            "dataset": "V2",
-            "augs": 32,
-            "align_steps": 1,
-        },
-    ]
+    tests = []
+    if DATA_TO_TEST in ["a", "both"]:
+        print("[TEST] Running tests on ImageNet A")
+        tests = [
+            {
+                "name": "TPT_sel_A",
+                "dataset": "A",
+            },
+            {
+                "name": "TPT_ens_nosel_A",
+                "dataset": "A",
+                "augs": 8,
+                "ensemble": True,
+                "confidence": 1,
+            },
+            {
+                "name": "TPT_ens_sel_A",
+                "dataset": "A",
+                "ensemble": True,
+                "confidence": 0.10,
+            },
+            {
+                "name": "TPT_align_A",
+                "dataset": "A",
+                "align_steps": 1,
+            },
+        ]
+
+    if DATA_TO_TEST in ["v2", "both"]:
+        print("[TEST] Running tests on ImageNet V2")
+        tests = (tests if DATA_TO_TEST == "both" else []) + [
+            {
+                "name": "TPT_sel_V2",
+                "dataset": "V2",
+                "augs": 32,
+            },
+            {
+                "name": "TPT_ens_nosel_V2",
+                "dataset": "V2",
+                "augs": 8,
+                "ensemble": True,
+                "confidence": 1,
+            },
+            {
+                "name": "TPT_ens_sel_V2",
+                "dataset": "V2",
+                "augs": 32,
+                "ensemble": True,
+                "confidence": 0.10,
+            },
+            {
+                "name": "TPT_align_V2",
+                "dataset": "V2",
+                "augs": 32,
+                "align_steps": 1,
+            },
+        ]
 
     for idx, settings in enumerate(tests):
 
@@ -107,7 +114,7 @@ if __name__ == "__main__":
         CONFIDENCE = test["confidence"]
 
         print("-" * 30)
-        print(f"[TEST] Running test {idx+1} of {len(tests)}: {test_name} \n{test}")
+        print(f"[TEST] Running test {idx + 1} of {len(tests)}: {test_name} \n{test}")
 
         print(f"[TEST] loading datasets with {AUGS} augmentation...")
         datasetRoot = "datasets"
@@ -128,11 +135,13 @@ if __name__ == "__main__":
             dataset = imageNetA
             classnames = imageNetACustomNames
             id_mapping = imageNetAMap
+            del imageNetV2, imageNetV2CustomNames, imageNetV2Map
         elif dataset_name == "V2":
             print("[TEST] using ImageNet V2")
             dataset = imageNetV2
             classnames = imageNetV2CustomNames
             id_mapping = imageNetV2Map
+            del imageNetA, imageNetACustomNames, imageNetAMap
 
         tpt = EasyTPT(
             device,
@@ -192,19 +201,18 @@ if __name__ == "__main__":
             tpt_acc = tpt_correct / (cnt)
 
             if cnt % VERBOSE == 0:
-                print(f"TPT Accuracy: {round(tpt_acc,3)}")
+                print(f"TPT Accuracy: {round(tpt_acc, 3)}")
                 print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
                 print(
-                    f"after {cnt} samples, average time {round(avg_time,3)}s ({round(1/avg_time,3)}it/s)\n"
+                    f"after {cnt} samples, average time {round(avg_time, 3)}s ({round(1 / avg_time, 3)}it/s)\n"
                 )
 
             if cnt == TEST_STOP:
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
 
-        del tpt, imageNetA, imageNetV2
+        del tpt, imageNetA if dataset_name == "A" else imageNetV2
 
-        print(f"[TEST] Final TPT Accuracy: {round(tpt_acc,3)} over {cnt} samples")
-
+        print(f"[TEST] Final TPT Accuracy: {round(tpt_acc, 3)} over {cnt} samples")
 
 breakpoint()

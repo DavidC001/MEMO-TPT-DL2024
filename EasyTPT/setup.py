@@ -103,5 +103,14 @@ def get_test_args():
         metavar="",
     )
 
+    parser.add_argument(
+        "-d",
+        "--data-to-test",
+        type=str,
+        help="Which dataset to test between 'a', 'v2', 'both'",
+        default='both',
+        metavar="",
+    )
+
     args = vars(parser.parse_args())
     return args
