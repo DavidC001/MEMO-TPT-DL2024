@@ -10,7 +10,6 @@ def main():
     # set seed
     torch.manual_seed(0)
     np.random.seed(0)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     Tests = {
         "ImageNet-A RN50 + RNXT": {
@@ -20,6 +19,7 @@ def main():
             "niter" : 1,
             "testSingleModels" : True,
             "simple_ensemble" : True,
+            "device" : "cuda",
             
             "models_type" : ["memo", "memo"],
             "args" : [
@@ -37,6 +37,7 @@ def main():
             "niter" : 1,
             "testSingleModels" : True,
             "simple_ensemble" : True,
+            "device" : "cuda",
             
             "models_type" : ["memo", "memo"],
             "args" : [
@@ -54,6 +55,7 @@ def main():
             "niter" : 1,
             "testSingleModels" : True,
             "simple_ensemble" : True,
+            "device" : "cuda",
             
             "models_type" : ["memo", "tpt"],
             "args" : [

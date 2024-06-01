@@ -4,7 +4,19 @@ from EasyTPT.models import EasyTPT
 import torch
 import torch.nn as nn
 
-def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0, top=0.1):
+def TPT(device="cuda", naug=64, arch="RN50", A=True, ttt_steps=1, align_steps=0, top=0.1):
+    """
+    Return the TPT model initialized with the given parameters
+
+    Args:
+        - device: device to use - default: cuda
+        - naug: number of augmentations to use - default: 64
+        - arch: backbone model to use - default: RN50
+        - A: use ImageNet A or ImageNet V2 - default: True
+        - ttt_steps: number of iterations for the TTT - default: 1
+        - align_steps: number of iterations for the alignment of the image embeddings - default: 0
+        - top: top confidence to select the augmented samples - default: 0.1
+    """
     # prepare TPT
     if not torch.cuda.is_available():
         print("Using CPU this is no bueno")
@@ -39,7 +51,20 @@ def TPT(device="cuda", naug=30, arch="RN50", A=True, ttt_steps=1, align_steps=0,
 from memo.models import memo_get_datasets, EasyMemo
 import torchvision.models as models
 
-def memo(device="cuda", prior_strength=0.94, naug=30, A=True, drop=0, ttt_steps=1, model="RN50", top=0.1):
+def memo(device="cuda", prior_strength=0.94, naug=64, A=True, drop=0, ttt_steps=1, model="RN50", top=0.1):
+    """
+    Return the MEMO model initialized with the given parameters
+
+    Args:
+        - device: device to use - default: cuda
+        - prior_strength: strength of the prior for the BN layers - default: 0.94
+        - naug: number of augmentations to use - default: 64
+        - A: use ImageNet A or ImageNet V2 - default: True
+        - drop: dropout to use, by setting it to >0 the model will use the ensemble strategy - default: 0
+        - ttt_steps: number of iterations for the TTT - default: 1
+        - model: backbone model to use - default: RN50
+        - top: top confidence to select the augmented samples - default: 0.1
+    """
     load_model = {
         "RN50": models.resnet50,
         "RNXT": models.resnext50_32x4d

@@ -9,6 +9,21 @@ import torch
 def test(models, datasets, temps, mapping, names,
          device="cuda", niter=1, top=0.1,
          simple_ensemble=False, testSingleModels=False):
+    """
+    Test the ensemble model on the datasets
+
+    Args:
+        - models: list of models
+        - datasets: list of datasets
+        - temps: list of temperatures for the models to rescale the logits
+        - names: names of the models
+        - mapping: mapping of the classes outputted by the models to the original 1000 classes
+        - device: device to use
+        - niter: number of iterations for the TTT
+        - top: top confidence to select the augmented samples
+        - simple_ensemble: use the simple ensemble, only marginalizing the ditributions
+        - testSingleModels: test the single models inside the ensamble
+    """
     correct = 0
     correct_no_back = 0
     correctSingle = [0]*len(models)
@@ -59,6 +74,23 @@ def test(models, datasets, temps, mapping, names,
 
 #expand args
 def runTest(models_type, args, temps, names, naug=64, niter=1, top=0.1, device="cuda", simple_ensemble=False, testSingleModels=False, imageNetA=True):
+    """
+    Run the test on Ensemble model with the given arguments
+
+    Args:
+        - models_type: list of the models type to use
+        - args: list of the arguments for the models
+        - temps: list of temperatures for the models to rescale the logits
+        - names: names of the models
+        - naug: number of augmentations to use
+        - niter: number of iterations for the TTT
+        - top: top confidence to select the augmented samples
+        - device: device to use
+        - simple_ensemble: use the simple ensemble, only marginalizing the ditributions
+        - testSingleModels: test the single models inside the ensamble
+        - imageNetA: use ImageNet A or ImageNet V2
+    """
+        
     models = []
     datasets = []
     mapping = None
