@@ -119,16 +119,6 @@ def main():
 
         with torch.no_grad():
             tpt.reset()
-
-        if ALIGN_STEPS > 0:
-            # print(f"Aligning embeddings for {ALIGN_STEPS} steps")
-            tpt.align_embeddings(imgs)
-            out = tpt.predict(imgs)
-            tpt_align_correct += 1 if id_mapping[out] == label else 0
-            tpt_align_predicted = classnames[out]
-
-        with torch.no_grad():
-            tpt.reset()
         out_id = tpt.predict(imgs)
         tpt_predicted = classnames[out_id]
 
@@ -140,7 +130,6 @@ def main():
         cnt += 1
 
         tpt_acc = tpt_correct / (cnt)
-        tpt_align_acc = tpt_align_correct / (cnt)
 
         ################ CLIP ############################
         if EVAL_CLIP:
@@ -155,13 +144,9 @@ def main():
         print(f"TPT Accuracy: {round(tpt_acc,3)}")
         if EVAL_CLIP:
             print(f"CLIP Accuracy: {round(clip_acc,3)}")
-        if ALIGN_STEPS > 0:
-            print(f"Aligned TPT Accuracy: {round(tpt_align_acc,3)}")
         print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
         if EVAL_CLIP:
             print(f"CLIP: \t{clip_predicted}")
-        if ALIGN_STEPS > 0:
-            print(f"A-TPT: \t{tpt_align_predicted}")
         print(f"after {cnt} samples\n")
     # breakpoint()
 
