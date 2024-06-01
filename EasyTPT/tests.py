@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "ttt_steps": 1,
         "align_steps": 0,
         "ensemble": False,
-        "test_stop": -1,
+        "test_stop": 2,
         "confidence": 0.10,
         "base_prompt": "A photo of a [CLS]",
         "arch": "RN50",
@@ -68,11 +68,6 @@ if __name__ == "__main__":
         print("[TEST] Running tests on ImageNet V2")
         tests = (tests if DATA_TO_TEST == "both" else []) + [
             {
-                "name": "TPT_sel_V2",
-                "dataset": "V2",
-                "augs": 32,
-            },
-            {
                 "name": "TPT_ens_nosel_V2",
                 "dataset": "V2",
                 "augs": 8,
@@ -82,15 +77,9 @@ if __name__ == "__main__":
             {
                 "name": "TPT_ens_sel_V2",
                 "dataset": "V2",
-                "augs": 32,
+                "augs": 64,
                 "ensemble": True,
-                "confidence": 0.10,
-            },
-            {
-                "name": "TPT_align_V2",
-                "dataset": "V2",
-                "augs": 32,
-                "align_steps": 1,
+                "confidence": 0.1,
             },
         ]
 
@@ -211,8 +200,6 @@ if __name__ == "__main__":
                 print(f"[TEST] Early stopping at {cnt} samples")
                 break
 
-        del tpt, imageNetA if dataset_name == "A" else imageNetV2
+        del tpt
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc, 3)} over {cnt} samples")
-
-breakpoint()
