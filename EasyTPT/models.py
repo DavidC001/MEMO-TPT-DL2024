@@ -190,7 +190,7 @@ class EasyTPT(EasyModel):
         clip, self.preprocess = load(
             arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
         )
-        clip.float()
+        # clip.float() looks like it is not needed
         self.clip = clip
         self.dtype = clip.dtype
         self.image_encoder = clip.encode_image
