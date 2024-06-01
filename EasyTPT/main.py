@@ -94,8 +94,7 @@ def main():
         ttt_steps=TTT_STEPS,
         lr=LR,
         align_steps=ALIGN_STEPS,
-        ensemble=True,
-        # ensemble=ENSEMBLE,
+        ensemble=ENSEMBLE,
         confidence=0.10,
     )
 
