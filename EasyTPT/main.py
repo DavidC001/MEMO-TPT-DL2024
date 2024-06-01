@@ -86,20 +86,22 @@ def main():
         imgs = data["img"]
         name = data["name"]
 
+        cnt += 1
         with torch.no_grad():
             tpt.reset()
+
         out_id = tpt.predict(imgs)
         tpt_predicted = classnames[out_id]
 
         if int(id_mapping[out_id]) == label:
-            print(":D")
+            emoji = ":D"
             tpt_correct += 1
         else:
-            print(":(")
-        cnt += 1
+            emoji = ":("
 
         tpt_acc = tpt_correct / (cnt)
 
+        print(emoji)
         print(f"TPT Accuracy: {round(tpt_acc,3)}")
         print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
         print(f"after {cnt} samples\n")

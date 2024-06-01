@@ -256,9 +256,9 @@ class EasyTPT(EasyModel):
             arch, device=device, download_root=DOWNLOAD_ROOT, jit=False
         )
 
-        # # Needed to tune the image encoder
-        # if align_steps > 0:
-        #     clip.float()
+        # Needed to tune the image encoder
+        if align_steps > 0:
+            clip.float()
 
         self.clip = clip
         self.dtype = clip.dtype
