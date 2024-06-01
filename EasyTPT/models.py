@@ -14,6 +14,24 @@ from EasyModel import EasyModel
 
 
 class EasyPromptLearner(nn.Module):
+    """
+    This class is responsible for learning the prompt for the TPT model,
+    it takes the classnames and the base prompt and creates the prompt
+    for each class. The prompts get tokenized and embedded, the embeddings
+    of the base prompt are then used to create the context for each class.
+    It's possible to put the context in any part of the prompt
+    using the [CLS] token. It's also possible to choose wether to
+    split the context into separate learning parameters for the prefix and
+    suffix or to keep them together.
+
+    Parameters:
+    - device (str): the device to run the model
+    - clip (torch.nn.Module): the clip model
+    - base_prompt (str): the base prompt to use
+    - splt_ctx (bool): split the context or not
+    - classnames (list): the classnames to use
+    """
+
     def __init__(
         self,
         device,
@@ -27,7 +45,6 @@ class EasyPromptLearner(nn.Module):
         self.device = device
         self.base_prompt = base_prompt
         self.tkn_embedder = clip.token_embedding
-        # set requires_grad to False
         self.tkn_embedder.requires_grad_(False)
 
         self.split_ctx = splt_ctx
@@ -35,12 +52,18 @@ class EasyPromptLearner(nn.Module):
         self.prepare_prompts(classnames)
 
     def prepare_prompts(self, classnames):
+        """
+        Prepares the prompts for the TPT model, this method tokenizes,
+        embeds and prepares the context for each class and the base prompt.
+
+        Parameters:
+        - classnames (list): the classnames to use
+        """
         print("[PromptLearner] Preparing prompts")
 
         self.classnames = classnames
-        # self.classnames = [cls.split(",")[0] for cls in self.classnames]
 
-        # get numbr of classes
+        # get number of classes
         self.cls_num = len(self.classnames)
 
         # get prompt text prefix and suffix
@@ -114,8 +137,19 @@ class EasyPromptLearner(nn.Module):
             self.register_parameter("ctx", self.ctx)
 
     def build_ctx(self):
+        """
+        While the context will be optimized, the embedded classnames
+        must stay the same, this method builds the context for each class
+        at each forward pass, using the optimized context.
+
+        Returns:
+        - torch.Tensor: the embedded prompt for each class
+        """
+
         prompts = []
         for i in range(self.cls_num):
+
+            # get the size of the padding (length depends on the classname size)
             pad_size = self.emb_cls.shape[1] - (
                 self.emb_prefix.shape[1]
                 + self.indc[i].item()
@@ -129,6 +163,7 @@ class EasyPromptLearner(nn.Module):
                 prefix = self.ctx[:, : self.emb_prefix.shape[1]]
                 suffix = self.ctx[:, self.emb_prefix.shape[1] :]
 
+            # concatenates all elements to build the prompt
             prompt = torch.cat(
                 (
                     self.emb_sot,
@@ -146,11 +181,14 @@ class EasyPromptLearner(nn.Module):
         return prompts
 
     def forward(self):
-
         return self.build_ctx()
 
     def reset(self):
-
+        """
+        This functions resets the context to the initial state, it
+        has to be run before each new inference to bring the context
+        to the initial state.
+        """
         if self.split_ctx:
             self.emb_prefix.data.copy_(self.pre_init_state)  # to be optimized
             self.emb_suffix.data.copy_(self.suf_init_state)  # to be optimized
