@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "ttt_steps": 1,
         "align_steps": 0,
         "ensemble": False,
-        "test_stop": -1,
+        "test_stop": 5,
         "confidence": 0.10,
         "base_prompt": "A photo of a [CLS]",
         "arch": "RN50",
@@ -43,6 +43,7 @@ if __name__ == "__main__":
             {
                 "name": "TPT_sel_A",
                 "dataset": "A",
+                "align_steps": 1,
             },
             {
                 "name": "TPT_ens_nosel_A",
@@ -174,6 +175,7 @@ if __name__ == "__main__":
 
             total_time += end - start
             avg_time = total_time / cnt
+
             if int(id_mapping[out_id]) == label:
                 emoji = ":D"
                 tpt_correct += 1
