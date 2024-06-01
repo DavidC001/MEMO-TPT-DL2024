@@ -60,14 +60,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "-C",
-        "--clip",
-        action="store_true",
-        help="Run parallel with CLIP or not",
-        default=False,
-    )
-
-    parser.add_argument(
         "-as",
         "--align_steps",
         type=int,
@@ -107,7 +99,7 @@ def get_test_args():
         "--data-to-test",
         type=str,
         help="Which dataset to test between 'a', 'v2', 'both'",
-        default='both',
+        default="both",
         metavar="",
     )
 

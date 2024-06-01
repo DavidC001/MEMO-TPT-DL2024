@@ -10,6 +10,8 @@ from EasyTPT.utils import tpt_get_datasets
 from EasyTPT.models import EasyTPT
 from EasyTPT.setup import get_test_args
 
+torch.autograd.set_detect_anomaly(True)
+
 if __name__ == "__main__":
 
     args = get_test_args()
@@ -44,6 +46,7 @@ if __name__ == "__main__":
             {
                 "name": "TPT_sel_A",
                 "dataset": "A",
+                "align_steps": 1,
             },
             {
                 "name": "TPT_ens_nosel_A",
@@ -188,6 +191,7 @@ if __name__ == "__main__":
 
             total_time += end - start
             avg_time = total_time / cnt
+
             if int(id_mapping[out_id]) == label:
                 emoji = ":D"
                 tpt_correct += 1
