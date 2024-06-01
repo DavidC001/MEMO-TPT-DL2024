@@ -81,6 +81,19 @@ if __name__ == "__main__":
                 "ensemble": True,
                 "confidence": 0.1,
             },
+            {
+                "name": "TPT_sel_V2",
+                "dataset": "V2",
+                "augs": 32,
+                "confidence": 0.2,
+            },
+            {
+                "name": "TPT_align_sel_V2",
+                "dataset": "V2",
+                "augs": 32,
+                "confidence": 0.2,
+                "align_steps": 1,
+            },
         ]
 
     for idx, settings in enumerate(tests):
