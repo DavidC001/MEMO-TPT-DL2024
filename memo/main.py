@@ -5,6 +5,7 @@ import numpy as np
 import torch.nn as nn
 import torchvision.models as models
 from tqdm import tqdm
+import argparse
 from datetime import timedelta
 
 sys.path.append('.')
@@ -43,7 +44,22 @@ if __name__ == "__main__":
     else:
         print("CUDA is available, using GPU")
 
-    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 1)
+    parser = argparse.ArgumentParser(
+        prog="main.py",
+        description="Run MEMO tests",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--datasets-root",
+        type=str,
+        help="Root folder of all the datasets, default='datasets'",
+        default='datasets',
+        metavar="",
+    )
+    args = vars(parser.parse_args())
+
+    imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 1, args["datasets_root"])
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
     mapping_v2 = [int(x) for x in imageNet_V2.classnames.keys()]
     net = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
