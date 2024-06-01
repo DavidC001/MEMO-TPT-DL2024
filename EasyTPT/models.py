@@ -197,6 +197,33 @@ class EasyPromptLearner(nn.Module):
 
 
 class EasyTPT(EasyModel):
+    """
+    This class is the main class for the TPT, it contains
+    the logic for running the TPT model in all its configurations,
+    as well as EasyPromptLearner, which is responsible for the
+    prompt learning.
+
+    Modes:
+    - Ensemble: in this mode the model won't preform tuning steps on the prompt,
+    instead it will run the inference on all the augmentations and take the prediction
+    that maximizes probability marginalized over the agumentations.
+    - Alignment: when align_steps > 0 the model will also perform align_steps tuning
+    steps on the image encoder in an effort to minimize the distance between the
+    embeddings of the augmentations.
+
+    Parameters:
+    - device (str): the device to run the model
+    - base_prompt (str): the base prompt to use
+    - arch (str): the architecture to use for CLIP
+    - splt_ctx (bool): split the context or not
+    - classnames (list): the classnames to use
+    - ensemble (bool): run TPT in ensemble mode
+    - ttt_steps (int): number of test time tuning steps
+    - lr (float): the learning rate
+    - align_steps (int): number of alignment steps
+    - confidence (float): confidence threshold for the confidence selection
+    """
+
     def __init__(
         self,
         device,
@@ -253,7 +280,6 @@ class EasyTPT(EasyModel):
         self.optim_state = deepcopy(self.optimizer.state_dict())
 
         if align_steps > 0:
-
             emb_trainable_param = []
             # unfreeze the image encoder
             for name, param in self.clip.visual.named_parameters():
@@ -281,21 +307,26 @@ class EasyTPT(EasyModel):
         """
         If x is a list of augmentations, run the confidence selection,
         otherwise just run the inference
+
+        Parameters:
+        - x (torch.Tensor or list): the image(s) to run the inference. One
+        image for the final prediction or a list of augmentations for the
+        tuning steps.
+        - top (int): the top percentage of samples to select
+
+        Returns:
+        - logits (torch.Tensor): the logits of the inference
         """
 
         if top == -1:
             top = self.confidence
 
         self.eval()
-        # breakpoint()
         if isinstance(x, list):
             x = torch.stack(x).to(self.device)
-
             logits = self.inference(x)
             if self.selected_idx is None:
                 logits, self.selected_idx = self.select_confident_samples(logits, top)
-
-                # self.selected_idx = self.select_closest_samples(x, top)
             else:
                 logits = logits[self.selected_idx]
         else:
@@ -305,11 +336,13 @@ class EasyTPT(EasyModel):
 
             logits = self.inference(x)
 
-        # print (f"[EasyTPT] input shape: {x.shape}")
-        # print("[EasyTPT] logits shape: ", logits.shape)
         return logits
 
     def inference(self, x):
+        """
+        Basically CLIP's forward method, but with the custom
+        encoder to use our embeddings
+        """
 
         with torch.no_grad():
             image_feat = self.image_encoder(x)
@@ -324,6 +357,31 @@ class EasyTPT(EasyModel):
         logits = logit_scale * image_feat @ txt_features.t()
 
         return logits
+
+    def predict(self, images, niter=1):
+
+        if self.ensemble:
+            with torch.no_grad():
+                out = self(images)
+                marginal_prob = F.softmax(out, dim=1).mean(0)
+                out_id = marginal_prob.argmax().item()
+        else:
+            if self.align_steps > 0:
+                self.align_embeddings(images)
+
+            for _ in range(niter):
+                out = self(images)
+                loss = self.avg_entropy(out)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+            with torch.no_grad():
+                out = self(images[0])
+                out_id = out.argmax(1).item()
+                prediction = self.prompt_learner.classnames[out_id]
+
+        # return out_id, prediction
+        return out_id
 
     def align_emb_loss(self, image_feat):
 
@@ -403,32 +461,6 @@ class EasyTPT(EasyModel):
             vals, idxs = torch.topk(sims, int(sims.shape[0] * top))
 
         return idxs
-
-    def predict(self, images, niter=1):
-
-        # self.reset()
-        if self.ensemble:
-            with torch.no_grad():
-                out = self(images)
-                marginal_prob = F.softmax(out, dim=1).mean(0)
-                out_id = marginal_prob.argmax().item()
-        else:
-            if self.align_steps > 0:
-                self.align_embeddings(images)
-
-            for _ in range(niter):
-                out = self(images)
-                loss = self.avg_entropy(out)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-            with torch.no_grad():
-                out = self(images[0])
-                out_id = out.argmax(1).item()
-                prediction = self.prompt_learner.classnames[out_id]
-
-        # return out_id, prediction
-        return out_id
 
     def get_optimizer(self):
         """
