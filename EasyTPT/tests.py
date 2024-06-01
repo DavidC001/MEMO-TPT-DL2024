@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "ttt_steps": 1,
         "align_steps": 0,
         "ensemble": False,
-        "test_stop": 2,
+        "test_stop": -1,
         "confidence": 0.10,
         "base_prompt": "A photo of a [CLS]",
         "arch": "RN50",
@@ -180,11 +180,6 @@ if __name__ == "__main__":
             with torch.no_grad():
                 tpt.reset()
 
-            if ALIGN_STEPS > 0:
-                if cnt % VERBOSE == 0:
-                    print(f"[EasyTPT] Aligning embeddings for {ALIGN_STEPS} steps")
-                tpt.align_embeddings(imgs)
-
             out_id = tpt.predict(imgs)
             tpt_predicted = classnames[out_id]
 
@@ -193,16 +188,15 @@ if __name__ == "__main__":
             total_time += end - start
             avg_time = total_time / cnt
             if int(id_mapping[out_id]) == label:
-                if cnt % VERBOSE == 0:
-                    print(":D")
+                emoji = ":D"
                 tpt_correct += 1
             else:
-                if cnt % VERBOSE == 0:
-                    print(":(")
+                emoji = ":("
 
             tpt_acc = tpt_correct / (cnt)
 
             if cnt % VERBOSE == 0:
+                print(emoji)
                 print(f"TPT Accuracy: {round(tpt_acc, 3)}")
                 print(f"GT: \t{name}\nTPT: \t{tpt_predicted}")
                 print(
