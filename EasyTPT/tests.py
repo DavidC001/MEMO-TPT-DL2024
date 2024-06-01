@@ -18,6 +18,7 @@ if __name__ == "__main__":
     if VERBOSE == -1:
         VERBOSE = sys.maxsize
     DATA_TO_TEST = args["data_to_test"]
+    DATASET_ROOT = args["datasets_root"]
     base_test = {
         "name": "Base",
         "dataset": "A",
@@ -119,7 +120,7 @@ if __name__ == "__main__":
         print(f"[TEST] Running test {idx + 1} of {len(tests)}: {test_name} \n{test}")
 
         print(f"[TEST] loading datasets with {AUGS} augmentation...")
-        datasetRoot = "datasets"
+        datasetRoot = DATASET_ROOT
         (
             imageNetA,
             _,

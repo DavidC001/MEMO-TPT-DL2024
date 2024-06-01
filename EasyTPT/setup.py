@@ -104,11 +104,19 @@ def get_test_args():
     )
 
     parser.add_argument(
-        "-d",
         "--data-to-test",
         type=str,
         help="Which dataset to test between 'a', 'v2', 'both'",
         default='both',
+        metavar="",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--datasets-root",
+        type=str,
+        help="Root folder of all the datasets, default='datasets'",
+        default='datasets',
         metavar="",
     )
 
