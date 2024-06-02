@@ -299,7 +299,7 @@ if __name__ == "__main__":
             "dataset": {
                 "imageNetA": False,
                 "naug": 8,
-                "aug_type": "identity",
+                "aug_type": "cut",
             },
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["v2", "both"]),
@@ -313,7 +313,7 @@ if __name__ == "__main__":
             "dataset": {
                 "imageNetA": True,
                 "naug": 64,
-                "aug_type": "identity",
+                "aug_type": "cut",
             },
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["a", "both"]),
@@ -327,7 +327,7 @@ if __name__ == "__main__":
             "dataset": {
                 "imageNetA": False,
                 "naug": 64,
-                "aug_type": "identity",
+                "aug_type": "cut",
             },
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["v2", "both"]),
@@ -339,5 +339,4 @@ if __name__ == "__main__":
             arg = base_test | tests[t]
             arg['memo'] = base_test['memo'] | tests[t]['memo']
             arg['dataset'] = base_test['dataset'] | tests[t]['dataset']
-            print(arg['memo']['device'])
             MEMO_testing_step(t, arg)
