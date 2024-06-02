@@ -56,8 +56,7 @@ class EasyMemo(EasyModel):
         self.weight_decay = weight_decay
         self.opt = opt
         self.confidence_idx = None
-        if not ensemble:
-            self.memo_modify_bn_pass()
+        self.memo_modify_bn_pass()
         self.criterion = self.avg_entropy
         self.niter = niter
         self.top = top
