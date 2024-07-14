@@ -108,7 +108,16 @@ def get_test_args():
         "--datasets-root",
         type=str,
         help="Root folder of all the datasets, default='datasets'",
-        default='datasets',
+        default="datasets",
+        metavar="",
+    )
+
+    parser.add_argument(
+        "-w",
+        "--wandb-secret",
+        type=str,
+        help="Wandb secret key",
+        default="",
         metavar="",
     )
 
