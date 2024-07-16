@@ -84,6 +84,7 @@ if __name__ == "__main__":
         type=str,
         help="Which dataset to test between 'a', 'v2', 'both'",
         default="both",
+        choices=["a", "v2", "both"],
         metavar="",
     )
 
@@ -92,6 +93,7 @@ if __name__ == "__main__":
         type=str,
         help="Which weights to use for the model, between 'default' and 'v1'",
         default="default",
+        choices=["default", "v1"],
         metavar="",
     )
 
