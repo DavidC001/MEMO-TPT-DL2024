@@ -53,7 +53,6 @@ if __name__ == "__main__":
             {
                 "name": "TPT_sel_A",
                 "dataset": "A",
-                "align_steps": 1,
             },
             {
                 "name": "TPT_ens_nosel_A",
