@@ -25,6 +25,16 @@ def main():
         default='datasets',
         metavar="",
     )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        type=int,
+        help="Frequency of verbose output",
+        default=100,
+        metavar="",
+    )
+
     args = vars(parser.parse_args())
     DATASET_ROOT = args["datasets_root"]
     Tests = {
@@ -89,7 +99,8 @@ def main():
     for test in Tests:
         print(f"Running test: {test}")
         test = Tests[test]
-        runTest(**test)
+        test["verbose"] = args["verbose"]
+        result = runTest(**test)
         print("\n-------------------\n")
 
 
