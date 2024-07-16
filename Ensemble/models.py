@@ -135,7 +135,8 @@ class Ensemble(nn.Module):
             prediction = torch.argmax(avg_logit, dim=0)
 
         if self.simple_ensemble:
-            self.reset()
+            self.reset()    
+            for model in self.models: model.eval()
             outs = self.get_models_outs(inputs, top)
             avg_logit = self.marginal_distribution(outs)
             prediction_no_back = torch.argmax(avg_logit, dim=0)
