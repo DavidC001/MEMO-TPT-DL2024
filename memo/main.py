@@ -27,12 +27,12 @@ def MEMO_testing_step(test, arguments):
     dataset_root = arguments["dataset"]["dataset_root"]
     naugs = arguments["dataset"]["naug"]
     aug_type = arguments["dataset"]["aug_type"]
-    weights = True if "weights" in arguments.keys() else False
+    weights = arguments["weights"]
 
     np.random.seed(0)
     torch.manual_seed(0)
 
-    weights = models.ResNet50_Weights.DEFAULT if weights else models.ResNet50_Weights.IMAGENET1K_V1
+    weights = models.ResNet50_Weights.IMAGENET1K_V1 if weights == 'v1' else models.ResNet50_Weights.DEFAULT
     net = models.resnet50(weights=weights).to(device)
     if "drop" in arguments.keys():
         net.layer4.add_module('dropout', nn.Dropout(arguments["drop"], inplace=True))
@@ -87,9 +87,18 @@ if __name__ == "__main__":
         metavar="",
     )
 
+    parser.add_argument(
+        "--initial-weights",
+        type=str,
+        help="Which weights to use for the model, between 'default' and 'v1'",
+        default="default",
+        metavar="",
+    )
+
     args = vars(parser.parse_args())
     DATASET_ROOT = args["datasets_root"]
     DATASET_TO_TEST = args["data_to_test"]
+    INITIAL_WEIGHTS = args["initial_weights"]
 
     imageNet_A, imageNet_V2 = memo_get_datasets('augmix', 1, args["datasets_root"])
     mapping_a = [int(x) for x in imageNet_A.classnames.keys()]
@@ -97,10 +106,10 @@ if __name__ == "__main__":
 
     del imageNet_A, imageNet_V2
 
-    memo_tests = False
+    memo_tests = True
     drop_tests = True
     ensemble_tests = True
-    baseline_tests = False
+    baseline_tests = True
 
     base_test = {
         "memo": {
@@ -119,6 +128,7 @@ if __name__ == "__main__":
             "dataset_root": DATASET_ROOT,
             "aug_type": "augmix",
         },
+        "weights": INITIAL_WEIGHTS,
     }
 
     tests = {
@@ -132,6 +142,7 @@ if __name__ == "__main__":
                 "imageNetA": True,
             },
             "run": baseline_tests and (DATASET_TO_TEST in ["a", "both"]),
+            "weights": "default",
         },
         "Baseline ImageNetV2": {
             "memo": {
@@ -143,6 +154,7 @@ if __name__ == "__main__":
                 "imageNetA": False,
             },
             "run": baseline_tests and (DATASET_TO_TEST in ["v2", "both"]),
+            "weights": "default",
         },
         "Baseline ImageNetA ResNet50 weights V1": {
             "memo": {
