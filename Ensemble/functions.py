@@ -9,7 +9,7 @@ import torch
 
 def test(models, datasets, temps, mapping, names,
          device="cuda", niter=1, top=0.1,
-         simple_ensemble=False, testSingleModels=False, dataset_root="datasets"):
+         simple_ensemble=False, testSingleModels=False, verbose=100):
     """
     Test the ensemble model on the datasets
 
@@ -24,6 +24,10 @@ def test(models, datasets, temps, mapping, names,
         - top: top confidence to select the augmented samples
         - simple_ensemble: use the simple ensemble, only marginalizing the ditributions
         - testSingleModels: test the single models inside the ensamble
+        - verbose: verbosity level
+    
+    Returns:
+        - results: dictionary with the results of the test
     """
     correct = 0
     correct_no_back = 0
@@ -49,7 +53,7 @@ def test(models, datasets, temps, mapping, names,
         label = labels[0]
         name = datasets[0][i]["name"]
 
-        print(f"Testing on {i} - name: {name} - label: {label}")
+        if(cnt%verbose==0): print(f"Tested Samples: {cnt} / {len(datasets[0])} - current sample: {name}")
 
         models_out, pred_no_back, prediction = model(data, niter=niter, top=top)
         models_out = [int(mapping[model_out]) for model_out in models_out]
@@ -60,26 +64,35 @@ def test(models, datasets, temps, mapping, names,
                 if label == model_out:
                     correctSingle[i] += 1
 
-                print(
+                if(cnt%verbose==0): 
+                    print(
                     f"\t{names[i]} model accuracy: {correctSingle[i]}/{cnt} - predicted class {model_out}: {class_names[model_out]} - tested: {cnt} / {len(datasets[0])}")
 
         if simple_ensemble:
             pred_no_back = int(mapping[pred_no_back])
             if label == pred_no_back:
                 correct_no_back += 1
-            print(
+            if(cnt%verbose==0): 
+                print(
                 f"\tSimple Ens accuracy: {correct_no_back}/{cnt} - predicted class {pred_no_back}: {class_names[pred_no_back]} - tested: {cnt} / {len(datasets[0])}")
 
         if label == prediction:
             correct += 1
 
-        print(
+        if(cnt%verbose==0): 
+            print(
             f"\tEnsemble accuracy: {correct}/{cnt} - predicted class {prediction}: {class_names[prediction]} - tested: {cnt} / {len(datasets[0])}")
+    
+    results = {
+        "Ensemble": correct / len(datasets[0]),
+        "Simple Ens": correct_no_back / len(datasets[0]),
+        "Single Models": [correctSingle[i] / len(datasets[0]) for i in range(len(models))]
+    }
 
 
 # expand args
 def runTest(models_type, args, temps, names, naug=64, niter=1, top=0.1, device="cuda", simple_ensemble=False,
-            testSingleModels=False, imageNetA=True, dataset_root="datasets"):
+            testSingleModels=False, imageNetA=True, dataset_root="datasets", verbose=100):
     """
     Run the test on Ensemble model with the given arguments
 
@@ -95,6 +108,11 @@ def runTest(models_type, args, temps, names, naug=64, niter=1, top=0.1, device="
         - simple_ensemble: use the simple ensemble, only marginalizing the ditributions
         - testSingleModels: test the single models inside the ensamble
         - imageNetA: use ImageNet A or ImageNet V2
+        - dataset_root: root of the dataset
+        - verbose: verbosity level
+
+    Returns:
+        - results: dictionary with the results of the test
     """
 
     models = []
@@ -110,8 +128,11 @@ def runTest(models_type, args, temps, names, naug=64, niter=1, top=0.1, device="
         models.append(model)
         datasets.append(data)
 
-    test(models=models, datasets=datasets, temps=temps, mapping=mapping, names=names,
-         device=device, niter=niter, top=top, simple_ensemble=simple_ensemble, testSingleModels=testSingleModels)
+    result = test(models=models, datasets=datasets, temps=temps, mapping=mapping, names=names,
+         device=device, niter=niter, top=top, simple_ensemble=simple_ensemble, testSingleModels=testSingleModels,
+         verbose=verbose)
 
     for model in models:
         del model
+    
+    return result
