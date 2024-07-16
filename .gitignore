@@ -166,4 +166,6 @@ datasets/
 
 !datasets/.placeholder
 
+# wandb files
 /wandb
+results_*
