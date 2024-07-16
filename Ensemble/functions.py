@@ -53,7 +53,7 @@ def test(models, datasets, temps, mapping, names,
         label = labels[0]
         name = datasets[0][i]["name"]
 
-        if(cnt%verbose==0): print(f"Tested Samples: {cnt} / {len(datasets[0])}")
+        if(cnt%verbose==0): print(f"Tested Samples: {cnt} / {len(datasets[0])} - current sample: {name}")
 
         models_out, pred_no_back, prediction = model(data, niter=niter, top=top)
         models_out = [int(mapping[model_out]) for model_out in models_out]
