@@ -46,6 +46,13 @@ if __name__ == "__main__":
         print("[TEST] Running tests on ImageNet A")
         tests = [
             {
+                "name": "TPT_baseline_A",
+                "dataset": "A",
+                "augs": 1,
+                "ensemble": True,
+                "confidence": 1,
+            },
+            {
                 "name": "TPT_sel_A",
                 "dataset": "A",
             },
@@ -72,6 +79,13 @@ if __name__ == "__main__":
     if DATA_TO_TEST in ["v2", "both"]:
         print("[TEST] Running tests on ImageNet V2")
         tests = (tests if DATA_TO_TEST == "both" else []) + [
+            {
+                "name": "TPT_baseline_V2",
+                "dataset": "V2",
+                "augs": 1,
+                "ensemble": True,
+                "confidence": 1,
+            },
             {
                 "name": "TPT_sel_V2",
                 "dataset": "V2",
