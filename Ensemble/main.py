@@ -101,6 +101,11 @@ def main():
         test = Tests[test]
         test["verbose"] = args["verbose"]
         result = runTest(**test)
+
+        print("\tFInal Results:")
+        for key in result:
+            print(f"\t\t{key}: {result[key]}")
+
         print("\n-------------------\n")
 
 
