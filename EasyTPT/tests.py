@@ -4,7 +4,6 @@ sys.path.append(".")
 
 import time
 import torch
-import wandb
 import datetime
 import numpy as np
 
@@ -23,10 +22,6 @@ if __name__ == "__main__":
         VERBOSE = sys.maxsize
     DATA_TO_TEST = args["data_to_test"]
     DATASET_ROOT = args["datasets_root"]
-    WANDB_SECRET = args["wandb_secret"]
-
-    if WANDB_SECRET != "":
-        wandb.login(key=WANDB_SECRET)
 
     base_test = {
         "name": "Base",
@@ -125,28 +120,6 @@ if __name__ == "__main__":
         TEST_STOP = test["test_stop"]
         CONFIDENCE = test["confidence"]
 
-        if WANDB_SECRET != "":
-            timestamp = time.strftime("%m%d%H%M%S")
-            run_name = f"{test_name}_{timestamp}"
-            wandb.init(
-                project="MEMOTPT",
-                name=run_name,
-                config={
-                    "test_name": test_name,
-                    "dataset_name": dataset_name,
-                    "base_prompt": BASE_PROMPT,
-                    "arch": ARCH,
-                    "splt_ctx": str(SPLT_CTX),
-                    "lr": LR,
-                    "augs": AUGS,
-                    "ttt_steps": TTT_STEPS,
-                    "align_steps": ALIGN_STEPS,
-                    "ensemble": ENSEMBLE,
-                    "test_stop": TEST_STOP,
-                    "confidence": CONFIDENCE,
-                },
-            )
-
         print("-" * 30)
         print(f"[TEST] Running test {idx + 1} of {len(tests)}: {test_name} \n{test}")
 
@@ -228,9 +201,6 @@ if __name__ == "__main__":
 
             tpt_acc = tpt_correct / (cnt)
 
-            if WANDB_SECRET != "":
-                wandb.log({"tpt_acc": tpt_acc})
-
             if cnt % VERBOSE == 0:
                 print(emoji)
                 print(f"TPT Accuracy: {round(tpt_acc, 3)}")
@@ -246,6 +216,3 @@ if __name__ == "__main__":
         del tpt
 
         print(f"[TEST] Final TPT Accuracy: {round(tpt_acc, 3)} over {cnt} samples")
-
-        if WANDB_SECRET != "":
-            wandb.finish()

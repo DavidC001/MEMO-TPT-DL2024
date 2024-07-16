@@ -112,14 +112,5 @@ def get_test_args():
         metavar="",
     )
 
-    parser.add_argument(
-        "-w",
-        "--wandb-secret",
-        type=str,
-        help="Wandb secret key",
-        default="",
-        metavar="",
-    )
-
     args = vars(parser.parse_args())
     return args
