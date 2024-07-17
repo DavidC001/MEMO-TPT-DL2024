@@ -88,6 +88,7 @@ def test(models, datasets, temps, mapping, names,
         "Simple Ens": correct_no_back / len(datasets[0]),
         "Single Models": [correctSingle[i] / len(datasets[0]) for i in range(len(models))]
     }
+    return results
 
 
 # expand args
