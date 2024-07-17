@@ -84,9 +84,9 @@ def test(models, datasets, temps, mapping, names,
             f"\tEnsemble accuracy: {correct}/{cnt} - predicted class {prediction}: {class_names[prediction]} - tested: {cnt} / {len(datasets[0])}")
     
     results = {
-        "Ensemble": correct / len(datasets[0]),
-        "Simple Ens": correct_no_back / len(datasets[0]),
-        "Single Models": [correctSingle[i] / len(datasets[0]) for i in range(len(models))]
+        "Ensemble": correct / len(datasets[0]) * 100,
+        "Simple Ens": correct_no_back / len(datasets[0]) * 100,
+        "Single Models": [correctSingle[i] / len(datasets[0]) * 100 for i in range(len(models))]
     }
     return results
 
