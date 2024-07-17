@@ -106,3 +106,7 @@ The MEMO (Meta Ensemble Model Optimization) module, represented by the `EasyMemo
 The `Ensemble` class aggregates multiple `EasyModel` instances to enhance prediction accuracy and reliability. It provides:
 - Initialization with a list of models and temperature settings for the ensemble.
 - Ensemble forward pass and reset functionality.
+
+# Report
+The final project report notebook is available in the `DL_AWS_project.ipynb` file. This notebook includes detailed explanations of the project, implementation details, results, and discussions.
+It can be run on AWS with the necessary configurations and datasets to reproduce the results.
