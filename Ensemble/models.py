@@ -40,6 +40,9 @@ class Ensemble(nn.Module):
 
         Args:
             logits (torch.Tensor): The logits to compute the entropy of.
+
+        Returns:
+            torch.Tensor: The entropy of the logits.
         """
         return -(torch.exp(logits) * logits).sum(dim=-1)
 
@@ -49,18 +52,21 @@ class Ensemble(nn.Module):
 
         Args:
             models_logits (torch.Tensor): The logits of the models in the ensemble.
+
+        Returns:
+            torch.Tensor: The marginal distribution of the ensemble.
         """
         # average logits for each model
-        avg_models_logits = torch.Tensor(models_logits.shape[0], models_logits.shape[2]).to(self.device)
+        avg_models_distributions = torch.Tensor(models_logits.shape[0], models_logits.shape[2]).to(self.device)
         for i, model_logits in enumerate(models_logits):
             avg_outs = torch.logsumexp(model_logits, dim=0) - torch.log(torch.tensor(model_logits.shape[0]))
             min_real = torch.finfo(avg_outs.dtype).min
             avg_outs = torch.clamp(avg_outs, min=min_real)
             avg_outs /= self.temps[i]
-            avg_models_logits[i] = torch.log_softmax(avg_outs, dim=0)
+            avg_models_distributions[i] = torch.log_softmax(avg_outs, dim=0)
 
         with torch.no_grad():
-            entropies = torch.stack([self.entropy(logits) for logits in avg_models_logits]).to(self.device)
+            entropies = torch.stack([self.entropy(logits) for logits in avg_models_distributions]).to(self.device)
             sum_entropies = torch.sum(entropies, dim=0)
             scale = torch.stack([sum_entropies/entopy for entopy in entropies]).to(self.device)
             #normalize sum to 1
@@ -69,9 +75,9 @@ class Ensemble(nn.Module):
         # print("\t\t[Ensemble] Entropies: ", entropies)
         # print("\t\t[Ensemble] Scales: ", scale)
 
-        avg_logits = torch.sum(torch.stack([scale[i].item() * avg_models_logits[i] for i in range(len(avg_models_logits))]), dim=0)
+        marginal_dist = torch.sum(torch.stack([scale[i].item() * avg_models_distributions[i] for i in range(len(avg_models_distributions))]), dim=0)
 
-        return avg_logits
+        return marginal_dist
 
     def get_models_outs(self, inputs, top=0.1):
         """
@@ -80,6 +86,9 @@ class Ensemble(nn.Module):
         Args:
             inputs (list): A list of inputs to be fed to the models.
             top (float, optional): The top percentage of the outputs to be used. Defaults to 0.1.
+
+        Returns:
+            torch.Tensor: The outputs of the models in the ensemble.
         """
         model_outs = torch.stack([model(inputs[i], top).to(self.device) for i, model in enumerate(self.models)]).to(self.device)
         return model_outs.to(self.device)
@@ -90,6 +99,9 @@ class Ensemble(nn.Module):
 
         Args:
             inputs (list): A list of inputs to be fed to the models.
+
+        Returns:
+            list: A list of the predictions of the single models.
         """
         models_pred = [model.predict(inputs[i]) for i, model in enumerate(self.models)]
         return models_pred
@@ -121,6 +133,9 @@ class Ensemble(nn.Module):
             inputs (list): A list of inputs to be fed to the models.
             niter (int, optional): The number of iterations to perform. Defaults to 1.
             top (float, optional): The top percentage of the outputs to be used. Defaults to 0.1.
+
+        Returns:
+            list, torch.Tensor, torch.Tensor: The predictions of the single models, the prediction of the ensemble without the entropy minimization step, and the prediction of the ensemble.
         """
         # get models outputs
         self.reset()
