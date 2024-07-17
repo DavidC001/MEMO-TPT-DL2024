@@ -96,6 +96,44 @@ The TPT (Test-Time Prompt Tuning) module, represented by the `EasyTPT` class, is
 - Methods for model forward pass, inference, and prediction.
 - Optimizer setup and selection of confident samples.
 
+### Usage
+
+There are two ways to run EasyTPT in its different configurations:
+
+```
+python EasyTPT/tests.py [-h] [-v] [--data-to-test] [-d]
+
+Run TPT tests
+
+options:
+  -h, --help            show this help message and exit
+  -v , --verbose        Frequency of verbose output
+  -d , --datasets-root  Root folder of all the datasets, default='datasets'
+  --data-to-test        Which dataset to test between 'a', 'v2', 'both'
+```
+
+`test.py` contains a set of predefined tests that can be run to evaluate the model's performance on ImageNetA, ImageNetV2, or both datasets. It's possible to edit or define custom tests by directly modifying the *tests* and *tpt_base_test* lists in the script. In each test it's possible to define an additional *test_stop* parameter in order to stop the test after a certain number of iterations.
+
+```
+python EasyTPT/main.py [-h] [-ar] [-p] [-t] [-au] [-S] [-A] [-as] [-en]
+
+Run TPT
+
+options:
+  -h, --help            show this help message and exit
+  -ar , --arch          Architecture to use
+  -p , --base-prompt    Base prompt to use
+  -t , --tts            Number of tts
+  -au , --augs          Number of augmentations (includes original image)
+  -S, --single-context  Split context or not
+  -A, --augmix          Use AugMix or not
+  -as , --align_steps   Number of alignment steps
+  -en, --ensemble       Use ensemble mode
+```
+
+`main.py` allows to run TPT with custom configurations, each parameter defined via command line. By default the script will run the model on ImageNetA but ImageNetV2 is aviable too.
+
+
 ## MEMO
 The MEMO (Meta Ensemble Model Optimization) module, represented by the `EasyMemo` class, focuses on optimizing model ensembles through meta-learning techniques. This class includes:
 - Initialization with model parameters, device setup, and optimization configurations.
