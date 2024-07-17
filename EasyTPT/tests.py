@@ -23,7 +23,7 @@ if __name__ == "__main__":
     DATA_TO_TEST = args["data_to_test"]
     DATASET_ROOT = args["datasets_root"]
 
-    base_test = {
+    tpt_base_test = {
         "name": "Base",
         "dataset": "A",
         "augs": 64,
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     for idx, settings in enumerate(tests):
 
-        test = base_test | settings
+        test = tpt_base_test | settings
 
         dataset_name = test["dataset"]
         test_name = test["name"]
