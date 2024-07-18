@@ -121,6 +121,8 @@ class EasyMemo(EasyModel):
 
         """
         self.niter = niter
+        nn.BatchNorm2d.prior = self.prior_strength
+
         if self.ens:
             self.net.train()
             predicted = self.ensemble(x)
@@ -140,6 +142,7 @@ class EasyMemo(EasyModel):
                     outs[i] = out[self.classes_mask]
                 predicted = outs.argmax(1).item()
 
+        nn.BatchNorm2d.prior = 1.0
         return predicted
 
     def reset(self):
@@ -151,7 +154,7 @@ class EasyMemo(EasyModel):
 
     def memo_modify_bn_pass(self):
         print('modifying BN forward pass')
-        nn.BatchNorm2d.prior = self.prior_strength
+        nn.BatchNorm2d.prior = 1.0
         nn.BatchNorm2d.forward = _modified_bn_forward
 
     def get_optimizer(self, lr=0.005, weight_decay=0.0001, opt='sgd'):
