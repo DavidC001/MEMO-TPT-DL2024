@@ -290,7 +290,7 @@ if __name__ == "__main__":
             "drop": 0.5,
             "run": drop_tests and (DATASET_TO_TEST in ["v2", "both"]),
         },
-        "DROP ImageNetA, cut ensemble without topk selection": {
+        "Cut ensemble ImageNetA, without topk selection": {
             "memo": {
                 "top": 1,
                 "mapping": mapping_a,
@@ -304,7 +304,7 @@ if __name__ == "__main__":
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["a", "both"]),
         },
-        "DROP ImageNetV2, cut ensemble  without topk selection": {
+        "Cut ensemble ImageNetV2, without topk selection": {
             "memo": {
                 "top": 1,
                 "mapping": mapping_v2,
@@ -318,7 +318,7 @@ if __name__ == "__main__":
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["v2", "both"]),
         },
-        "DROP ImageNetA, cut ensemble  with topk selection": {
+        "Cut ensemble ImageNetA, with topk selection": {
             "memo": {
                 "top": 0.1,
                 "mapping": mapping_a,
@@ -332,7 +332,7 @@ if __name__ == "__main__":
             "drop": 0,
             "run": ensemble_tests and (DATASET_TO_TEST in ["a", "both"]),
         },
-        "DROP ImageNetV2, cut ensemble  with topk selection": {
+        "Cut ensemble ImageNetV2, with topk selection": {
             "memo": {
                 "top": 0.1,
                 "mapping": mapping_v2,
