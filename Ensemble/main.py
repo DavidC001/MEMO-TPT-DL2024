@@ -94,6 +94,26 @@ def main():
             "names": ["MEMO", "TPT"],
             "dataset_root": DATASET_ROOT,
         },
+
+        "ImageNet-A RN50 + RNXT + TPT": {
+            "imageNetA": True,
+            "naug": 64,
+            "top": 0.1,
+            "niter": 1,
+            "testSingleModels": True,
+            "simple_ensemble": True,
+            "device": "cuda",
+
+            "models_type": ["memo", "memo", "tpt"],
+            "args": [
+                {"device": "cuda", "drop": 0, "ttt_steps": 1, "model": "RN50"},
+                {"device": "cuda", "drop": 0, "ttt_steps": 1, "model": "RNXT"},
+                {"device": "cuda", "ttt_steps": 1, "align_steps": 0, "arch": "RN50"}
+            ],
+            "temps": [1, 1, 0.7],
+            "names": ["MEMO-RN50", "MEMO-RNXT", "TPT"],
+            "dataset_root": DATASET_ROOT,
+        },
     }
 
     for test in Tests:
