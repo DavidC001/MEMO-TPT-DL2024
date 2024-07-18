@@ -1,3 +1,27 @@
 put optimizer in Easy Model definition
 
 Update UML diagram?
+
+
+TPT:
+- baseline raggiunta
+- augmentations ensamble batte TPT
+- alignment no bueno
+- performance 
+- only resnet
+
+MEMO:
+- baseline raggiunta
+- augmentations ensamble batte MEMO
+- dropout funziona bene con V2 e male con V1
+- performance
+
+Ensable:
+- outperforms both singular models
+- models with different recipies improve results
+- BATTE TUTTO SIUUUUUUM
+
+Conclusions:
+
+- ensambling augs works better than backprop
+- big flex
