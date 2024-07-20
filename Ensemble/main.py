@@ -14,7 +14,7 @@ def main():
     np.random.seed(0)
     parser = argparse.ArgumentParser(
         prog="main.py",
-        description="Run MEMO tests",
+        description="Run Ensemble tests",
     )
 
     parser.add_argument(

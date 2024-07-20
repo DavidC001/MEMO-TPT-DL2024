@@ -145,6 +145,42 @@ The `Ensemble` class aggregates multiple `EasyModel` instances to enhance predic
 - Initialization with a list of models and temperature settings for the ensemble.
 - Ensemble forward pass and reset functionality.
 
+### Usage
+To test the ensamble of models, use the script `main.py` under the `Ensemble` directory. The script allows to define the models to be used in the ensemble and the temperature to be applied to the predictions, an example of a valid experiment definition is the following:
+
+```python
+{
+    "TEST_NAME": {
+        "imageNetA" : True, # if the test should be performed on ImageNet-A or on ImageNet-V2
+        "naug" : 64, # number of augmentations to perform
+        "top" : 0.1, # percentage of the top augmentations to consider (confidence selection)
+        "niter" : 1, # number of optimization steps
+        "testSingleModels" : True, # if we wanto to also compute the results for the single models
+        "simple_ensemble" : True, # if we want to also compute the results for the simple ensemble strategy
+        "device" : "cuda", # device to use for the computation
+            
+        "models_type" : ["memo", "tpt", "..."], # list of models types to use for the ensemble, can be "memo" or "tpt"
+        "args" : [ # arguments for each model
+            {"device": "cuda", "drop": 0, "ttt_steps": 1, "model": "RN50"}, # arguments for the first model
+            {"device": "cuda", "ttt_steps": 1, "align_steps": 0, "arch": "RN50"}, # arguments for the second model
+            "..."
+            ],
+        "temps" : [1.55, 0.7], # temperature rescaling to use for each model
+        "names" : ["MEMO", "TPT"], # names to use for each model
+    }
+}
+```
+
+To execute the script, run the following command:
+
+```bash
+python main.py
+
+optional arguments:
+  -v, --verbose         Frequency of verbose output
+  -d , --datasets-root  Root folder of all the datasets, default='datasets'
+```
+
 # Report
 The final project report notebook is available in the `DL_AWS_project.ipynb` file. This notebook includes detailed explanations of the project, implementation details, results, and discussions.
 It can be run on AWS with the necessary configurations and datasets to reproduce the results.
