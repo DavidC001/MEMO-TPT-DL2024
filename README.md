@@ -1,4 +1,5 @@
 # MEMO-TPT-DL2024
+![image](https://github.com/user-attachments/assets/63853bb5-9746-4020-baf8-58bad44aaf15)
 
 This repository contains the project for the master's course in Deep Learning, focusing on Meta Ensemble Model Optimization (MEMO) and Transformer Prompt Tuning (TPT).
 
