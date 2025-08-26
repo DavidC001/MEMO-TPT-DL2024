@@ -136,7 +136,8 @@ options:
 
 
 ## MEMO
-The MEMO (Meta Ensemble Model Optimization) module, represented by the `EasyMemo` class, focuses on optimizing model ensembles through meta-learning techniques. This class includes:
+The MEMO module, represented by the `EasyMemo` class, focuses on optimizing the model parameters to lower the entropy of the distributions from augmented views of the image. 
+This class includes:
 - Initialization with model parameters, device setup, and optimization configurations.
 - Methods for model forward pass, inference, and prediction.
 - Optimizer setup and selection of confident samples.
